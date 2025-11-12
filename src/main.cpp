@@ -81,7 +81,7 @@ void autonomous() {}
  */
 pros::Rotation forwardRot = pros::Rotation(4);
 pros::Rotation sidewaysRot = pros::Rotation(14);
-pros::IMU imu = pros::IMU(2); //TODO get the correct port number
+pros::IMU imu = pros::IMU(17); //TODO get the correct port number
 
 odometry odom = odometry(forwardRot, sidewaysRot, imu);
 
