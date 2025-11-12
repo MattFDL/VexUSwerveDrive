@@ -1,6 +1,7 @@
 #include "Point2D.cpp"
 #include <vector>
 #include "AutoUtility.h"
+#include <cmath>
 
 class Path //Linear, Quadratic, and Cubic Bezier Curves
 {
@@ -90,6 +91,30 @@ public:
             Point2D final_point = linearInterpolate(current_interval, start_position, end_position);
             curvePoints.push_back(final_point);
         }
+    }
+
+    void resizeCurve(double distance_threshold = 0.1) { //hopefully I implemented this correctly
+        std::vector<Point2D> newCurvePoints;
+
+        for (int i = 0; i < curvePoints.size() - 1; i++) { 
+            Point2D point1 = curvePoints[i];
+            Point2D point2 = curvePoints[i+1];
+            double distanceFromPoints = calculateDistance(point1, point2);
+            if (distanceFromPoints > distance_threshold) {
+                int spacing_times = static_cast<int>(std::ceil(distanceFromPoints / distance_threshold));
+                for (int j = 0; j < spacing_times; j++) {
+                    double t = static_cast<double>(j) / spacing_times;
+                    Point2D final_point = linearInterpolate(t, point1, point2);
+                    newCurvePoints.push_back(final_point);
+                }
+            } else {
+                newCurvePoints.push_back(point1);
+            }
+        }
+        
+        newCurvePoints.push_back(curvePoints.back());
+
+        curvePoints = std::move(newCurvePoints);
     }
 
 };
