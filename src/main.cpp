@@ -94,10 +94,11 @@ void opcontrol() {
 
 	//pros::Task odom_task(odometry_thread); Threading for later ;) :O
 	
+	odom.reset_sensors();
 
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::MotorGroup left_mg({1, -2, 3});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-	pros::MotorGroup right_mg({-4, 5, -6});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
+	pros::MotorGroup left_mg({-10, -9, 2, -1});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
+	pros::MotorGroup right_mg({20, 18, -12, 11});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
 
 	while (true) {
 
@@ -106,17 +107,17 @@ void opcontrol() {
 		//                  (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
 
 		// // Arcade control scheme
-		// int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
-		// int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
-		// left_mg.move(dir - turn);                      // Sets left motor voltage
-		// right_mg.move(dir + turn);                     // Sets right motor voltage
+		int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
+		int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
+		left_mg.move(dir - turn);                      // Sets left motor voltage
+		right_mg.move(dir + turn);                     // Sets right motor voltage
 
 		odom.calculate_postition();
 		
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Y: %f", odom.position_y);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Heading_Sensor: %f", odom.position_rotation_sensor);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Heading_IMU: %f", odom.position_rotation_imu);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading_Sensor: %f", odom.position_rotation_sensor);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Heading_IMU: %f", odom.position_rotation_imu);
 
 		pros::delay(20);                               // Run for 20 ms then update
 	}

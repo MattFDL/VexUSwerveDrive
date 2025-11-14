@@ -38,19 +38,22 @@ public:
 
     void reset_sensors() {
         forwardRotation.reset(); //DO NOT PUT IN CONSTRUCTOR PLEASE THIS CRASHES THINGS DONT REALLY KNOW WHY
+        forwardRotation.reset_position();
         sidewaysRotation.reset();
+        sidewaysRotation.reset_position();
         imu.reset();
     }
 
     void calculate_postition()
     {
-        double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / 36000.0);
+        double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / 143580.0); //This value was determined experimentally
         double forward_count_turns = (static_cast<double>(forwardRotation.get_position()) / 36000.0);
 
-        test = rotation_count_turns;
+        
 
         double deltaRotationSensorTurns = rotation_count_turns - rotation_count_pre;
-        double deltaRad = ((deltaRotationSensorTurns * WHEEL_DIAMETER * M_PI) / (ROTATION_DISTANCE_WHEEL_RADIUS * 2 * M_PI)) * 360 * fudge_factor_rotation;
+        double deltaRad = deltaRotationSensorTurns * 360.0;
+        
         position_rotation_sensor += deltaRad;
 
         double deltaForwardSensorTurns = forward_count_turns - forward_count_pre;
