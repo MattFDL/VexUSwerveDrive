@@ -3,6 +3,9 @@
 #include "AutoUtility.h"
 #include <cmath>
 
+//Probably put guards in here eventually (#pragma once)
+
+
 class Path //Linear, Quadratic, and Cubic Bezier Curves
 {
 public:

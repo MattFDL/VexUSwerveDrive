@@ -1,8 +1,7 @@
 #include <array>
 #include <cmath>
-#include "main.h"
-#include "PIDController.cpp"
-using namespace pros;
+#include "pros/rotation.hpp"
+#include "pros/imu.hpp"
 
 class odometry
 {
@@ -23,28 +22,32 @@ public:
 
     double fudge_factor_rotation = 1.2857;
 
-    Rotation forwardRotation;
-    Rotation sidewaysRotation;
-    IMU imu;
+    double test = 0;
 
-    PIDController pid = PIDController(0.5, 0, 0);
+    pros::Rotation forwardRotation;
+    pros::Rotation sidewaysRotation;
+    pros::IMU imu;
+
     double current_reading_imu_pid = 0;
     
 
-    odometry(Rotation forward, Rotation sideways, IMU i) : forwardRotation(forward),
+    odometry(pros::Rotation& forward, pros::Rotation& sideways, pros::IMU& i) : forwardRotation(forward),
                                                            sidewaysRotation(sideways), 
                                                            imu(i)
-    {
-        forwardRotation.reset();
+    {}
+
+    void reset_sensors() {
+        forwardRotation.reset(); //DO NOT PUT IN CONSTRUCTOR PLEASE THIS CRASHES THINGS DONT REALLY KNOW WHY
         sidewaysRotation.reset();
         imu.reset();
-        pid.enableContinuousInput(-180, 180); //hopefully ts works i dont really know man
     }
 
     void calculate_postition()
     {
-        double rotation_count_turns = (sidewaysRotation.get_position() / 36000);
-        double forward_count_turns = (forwardRotation.get_position() / 36000);
+        double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / 36000.0);
+        double forward_count_turns = (static_cast<double>(forwardRotation.get_position()) / 36000.0);
+
+        test = rotation_count_turns;
 
         double deltaRotationSensorTurns = rotation_count_turns - rotation_count_pre;
         double deltaRad = ((deltaRotationSensorTurns * WHEEL_DIAMETER * M_PI) / (ROTATION_DISTANCE_WHEEL_RADIUS * 2 * M_PI)) * 360 * fudge_factor_rotation;
@@ -68,8 +71,10 @@ public:
     }
     double get_imu_reading() {
         double reading_adjusted = (180 - imu.get_heading());
-        double reading_adjusted_pid = pid.calculate(current_reading_imu_pid, reading_adjusted);
-        current_reading_imu_pid = reading_adjusted_pid;
-        return reading_adjusted_pid;
+        //might need to do PID stuff here. 
+        // double reading_adjusted_pid = pid.calculate(current_reading_imu_pid, reading_adjusted);
+        // current_reading_imu_pid = reading_adjusted_pid;
+        // return reading_adjusted_pid;
+        return reading_adjusted;
     }
 };

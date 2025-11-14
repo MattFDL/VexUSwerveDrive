@@ -18,8 +18,6 @@ void on_center_button() {
 	} else {
 		pros::lcd::clear_line(2);
 	}
-	
-	
 }
 
 /**
@@ -29,10 +27,7 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
-
-	pros::lcd::register_btn1_cb(on_center_button);
+	
 }
 
 /**
@@ -79,11 +74,11 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-pros::Rotation forwardRot = pros::Rotation(4);
-pros::Rotation sidewaysRot = pros::Rotation(14);
-pros::IMU imu = pros::IMU(17); //TODO get the correct port number
+pros::Rotation forwardRot(4);
+pros::Rotation sidewaysRot(14);
+pros::IMU imu(17); //TODO get the correct port number
 
-odometry odom = odometry(forwardRot, sidewaysRot, imu);
+odometry odom(forwardRot, sidewaysRot, imu);
 
 std::atomic<std::array<double, 3>> myAtomicStdArray;
 
@@ -104,8 +99,8 @@ void opcontrol() {
 	pros::MotorGroup left_mg({1, -2, 3});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
 	pros::MotorGroup right_mg({-4, 5, -6});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
 
-
 	while (true) {
+
 		// pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
 		//                  (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
 		//                  (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
@@ -117,13 +112,11 @@ void opcontrol() {
 		// right_mg.move(dir + turn);                     // Sets right motor voltage
 
 		odom.calculate_postition();
-
-		pros::lcd::clear();
 		
-    	pros::lcd::print(1, "X: %f", odom.position_x);
-		pros::lcd::print(2, "Y: %f", odom.position_y);
-		pros::lcd::print(3, "Heading_Sensor: %f", odom.position_rotation_sensor);
-		pros::lcd::print(4, "Heading_IMU: %f", odom.position_rotation_imu);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Y: %f", odom.position_y);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Heading_Sensor: %f", odom.position_rotation_sensor);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Heading_IMU: %f", odom.position_rotation_imu);
 
 		pros::delay(20);                               // Run for 20 ms then update
 	}
