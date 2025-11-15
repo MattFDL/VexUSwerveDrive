@@ -68,6 +68,12 @@ struct vec2{
         //cout<<(x*a.y)<<'-'<<(y*a.x)<<'='<<(x*a.y)-(y*a.x)<<'\n';
         return((x*a.y)-(y*a.x));
     }
+    double get_x(){
+        return x;
+    }
+    double get_y(){
+        return y;
+    }
 };
 
 bool range(double num,double max,double min){
