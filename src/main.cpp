@@ -116,8 +116,10 @@ void opcontrol() {
 		
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading_Sensor: %f", odom.position_rotation_sensor);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading_Sensor: %f", odom.adjusted_rotation);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Heading_IMU: %f", odom.position_rotation_imu);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Test: %f", odom.test);
+
 
 		pros::delay(20);                               // Run for 20 ms then update
 	}

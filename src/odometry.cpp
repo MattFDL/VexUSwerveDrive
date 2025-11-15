@@ -9,6 +9,7 @@ public:
     double position_x = 0;
     double position_y = 0;
     double position_rotation_sensor = 0;
+    double adjusted_rotation = 0;
 
     bool use_imu = false;
 
@@ -46,18 +47,18 @@ public:
 
     void calculate_postition()
     {
-        double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / 143580.0); //This value was determined experimentally
-        double forward_count_turns = (static_cast<double>(forwardRotation.get_position()) / 36000.0);
-
+        double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / 143580.0); //This value was determined experimentally (in 360 turns)
+        double forward_count_turns = (static_cast<double>(forwardRotation.get_position()) / 5243.0); //This value was determined experimentally (in inches)
+        test = forward_count_turns;
         
 
         double deltaRotationSensorTurns = rotation_count_turns - rotation_count_pre;
-        double deltaRad = deltaRotationSensorTurns * 360.0;
+        double deltaDegrees = deltaRotationSensorTurns * 360.0;
         
-        position_rotation_sensor += deltaRad;
+        position_rotation_sensor += deltaDegrees;
 
         double deltaForwardSensorTurns = forward_count_turns - forward_count_pre;
-        double deltaPos = (deltaForwardSensorTurns * WHEEL_DIAMETER * M_PI);
+        double deltaPos = deltaForwardSensorTurns; //* WHEEL_DIAMETER * M_PI);
 
         double position_rotation_rad = position_rotation_sensor * (M_PI / 180.0);
         if (use_imu)
@@ -65,6 +66,8 @@ public:
             position_rotation_imu = get_imu_reading();
             position_rotation_rad = position_rotation_imu * (M_PI / 180.0);
         }
+
+        adjusted_rotation = inputModulus(position_rotation_sensor, -180, 180);
 
         position_x = position_x + (cos(position_rotation_rad) * deltaPos);
         position_y = position_y + (sin(position_rotation_rad) * deltaPos);
@@ -79,5 +82,19 @@ public:
         // current_reading_imu_pid = reading_adjusted_pid;
         // return reading_adjusted_pid;
         return reading_adjusted;
+    }
+    double inputModulus(double val, double min, double max) {
+        double value = val;
+        double modulus = max - min;
+
+        int numMax = (int)((value - min) / modulus); 
+        //casting to int should round down to nearest int (if it works the same as in java)
+        value -= numMax * modulus;
+
+        int numMin = (int)((value - max) / modulus); 
+        //casting to int should round down to nearest int (if it works the same as in java)
+        value -= numMin * modulus;
+
+        return value;
     }
 };
