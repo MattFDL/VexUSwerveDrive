@@ -101,17 +101,20 @@ public:
         // TODO:  return reading_adjusted_pid;
         return reading_adjusted;
     }
-    double inputModulus(double val, double min, double max) {
+
+    double inputModulus(double val, double min, double max) { 
+        //Keeps the value within the interval min to max
+        //This should be used on the rotation readings for consistency purposes
+
+        //Might move this function into a public file that can be used everywhere
+        //Because it is also used in PIDController
         double value = val;
         double modulus = max - min;
 
         int numMax = (int)((value - min) / modulus); 
-        //casting to int should round down to nearest int (if it works the same as in java)
         value -= numMax * modulus;
 
-        int numMin = (int)((value - max) / modulus); 
-        //casting to int should round down to nearest int (if it works the same as in java)
-        value -= numMin * modulus;
+        int numMin = (int)((value - max) / modulus);         value -= numMin * modulus;
 
         return value;
     }
