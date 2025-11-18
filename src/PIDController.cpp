@@ -97,7 +97,7 @@ public:
     double calculate(double measurement, double setpoint)
     {
         setSetpoint(setpoint);
-
+        
         return calculate(measurement);
     }
 
@@ -129,10 +129,12 @@ public:
             m_totalError =
                 clamp(
                     m_totalError + m_error * m_period,
-                    min_I / kI,
-                    max_I / kI);
+                    min_I,
+                    max_I);
         }
-
+        if (std::abs(m_error) < error_tolerance) {
+            return 0;
+        }
         return kP * m_error + kI * m_totalError + kD * m_errorDerivative;
     }
 

@@ -1,6 +1,7 @@
 #include "main.h"
 #include "odometry.cpp"
 #include <string>
+#include "PIDController.cpp"
 
 
 
@@ -96,6 +97,16 @@ void opcontrol() {
 	
 	odom.reset_sensors();
 
+	PIDController pid(80.0, 35.0, 0.0); //20.0
+	pid.enableContinuousInput(-180, 180);
+
+
+	pid.setErrorTolerance(2.0);
+
+	pid.setIzone(30);
+	pid.setMaxMinI(4000, -4000);
+	
+
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::MotorGroup left_mg({-10, -9, 2, -1});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
 	pros::MotorGroup right_mg({20, 18, -12, 11});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
@@ -107,10 +118,25 @@ void opcontrol() {
 		//                  (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
 
 		// // Arcade control scheme
-		int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
-		int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
-		left_mg.move(dir - turn);                      // Sets left motor voltage
-		right_mg.move(dir + turn);                     // Sets right motor voltage
+		odom.calculate_postition();
+
+		// int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
+		// int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
+		int turn = 0;
+
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+			turn = (int) pid.calculate(odom.adjusted_rotation, 90);
+		} else {
+			turn = 0;
+		}
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Turn: %i", turn);
+
+
+		// left_mg.move(dir - turn);                      // Sets left motor voltage
+		// right_mg.move(dir + turn);                     // Sets right motor voltage
+		left_mg.move_voltage(turn);
+		right_mg.move_voltage(-turn);
+
 
 		odom.calculate_postition();
 		
