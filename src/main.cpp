@@ -2,8 +2,8 @@
 #include "odometry.cpp"
 #include <string>
 #include "PIDController.cpp"
-
-
+#include "Autonomous/Path.cpp"
+#include "Autonomous/Point2D.cpp"
 
 /**
  * A callback function for LLEMU's center button.
@@ -11,12 +11,16 @@
  * When this callback is fired, it will toggle line 2 of the LCD text between
  * "I was pressed!" and nothing.
  */
-void on_center_button() {
+void on_center_button()
+{
 	static bool pressed = false;
 	pressed = !pressed;
-	if (pressed) {
+	if (pressed)
+	{
 		pros::lcd::set_text(2, "I was pressed!");
-	} else {
+	}
+	else
+	{
 		pros::lcd::clear_line(2);
 	}
 }
@@ -27,8 +31,8 @@ void on_center_button() {
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-void initialize() {
-	
+void initialize()
+{
 }
 
 /**
@@ -76,8 +80,8 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 pros::Rotation forwardRot(4);
-pros::Rotation sidewaysRot(14);
-pros::IMU imu(17); //TODO get the correct port number
+pros::Rotation sidewaysRot(-14);
+pros::IMU imu(17); // TODO get the correct port number
 
 odometry odom(forwardRot, sidewaysRot, imu);
 
@@ -85,33 +89,54 @@ std::atomic<std::array<double, 3>> myAtomicStdArray;
 
 // void odometry_thread() {
 // 	while (true) {
-		
+
 // 		pros::delay(10);
 // 	}
 
 // }; TODO Threading later :----D
+Path path(Point2D(10, 10), Point2D(30, 100), Point2D(100, 200), Point2D(200, 10));
 
-void opcontrol() {
 
-	//pros::Task odom_task(odometry_thread); Threading for later ;) :O
-	
+void test_function()
+{
+	pros::screen::draw_circle(10, 10, 5);
+	pros::screen::draw_circle(30, 100, 5);
+	pros::screen::draw_circle(100, 200, 5);
+	pros::screen::draw_circle(200, 10, 5);
+	for (Point2D num : path.curvePoints)
+	{
+		int x = (int)num.x;
+		int y = (int)num.y;
+		pros::screen::draw_pixel(x, y);
+	}
+	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Length: %f", path.curve_length);
+}
+
+void opcontrol()
+{
+
+	// pros::Task odom_task(odometry_thread); Threading for later ;) :O
+
 	odom.reset_sensors();
 
-	PIDController pid(80.0, 35.0, 0.0); //20.0
+	PIDController pid(80.0, 35.0, 0.0); // 20.0
 	pid.enableContinuousInput(-180, 180);
-
 
 	pid.setErrorTolerance(2.0);
 
 	pid.setIzone(30);
 	pid.setMaxMinI(4000, -4000);
-	
+
+	path.setStepCount(30);
+	path.generateLinearPath();
+	path.resizeCurve();
 
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::MotorGroup left_mg({-10, -9, 2, -1});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-	pros::MotorGroup right_mg({20, 18, -12, 11});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
+	pros::MotorGroup left_mg({-10, -9, 2, -1});	  // Creates a motor group with forwards ports 1 & 3 and reversed port 2
+	pros::MotorGroup right_mg({20, 18, -12, 11}); // Creates a motor group with forwards port 5 and reversed ports 4 & 6
 
-	while (true) {
+	while (true)
+	{
 
 		// pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
 		//                  (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
@@ -124,29 +149,34 @@ void opcontrol() {
 		// int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
 		int turn = 0;
 
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-			turn = (int) pid.calculate(odom.adjusted_rotation, 90);
-		} else {
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+		{
+			turn = (int)pid.calculate(odom.adjusted_rotation, 90);
+		}
+		else
+		{
 			turn = 0;
 		}
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Turn: %i", turn);
-
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Turn: %i", turn);
 
 		// left_mg.move(dir - turn);                      // Sets left motor voltage
 		// right_mg.move(dir + turn);                     // Sets right motor voltage
 		left_mg.move_voltage(turn);
 		right_mg.move_voltage(-turn);
 
-
 		odom.calculate_postition();
-		
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading_Sensor: %f", odom.adjusted_rotation);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Heading_IMU: %f", odom.position_rotation_imu);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Test: %f", odom.test);
 
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading_Sensor: %f", odom.adjusted_rotation);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Heading_IMU: %f", odom.position_rotation_imu);
+		//pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Test: %f", odom.test);
 
-		pros::delay(20);                               // Run for 20 ms then update
+		test_function();
+
+		pros::delay(20); // Run for 20 ms then update
+
+		// TODO: change everything (that you can) to references
 	}
 }
+
