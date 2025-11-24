@@ -9,6 +9,11 @@ public:
     // position variables
     double position_x = 0;
     double position_y = 0;
+
+    double velocity_x = 0;
+    double velocity_y = 0;
+    double velocity = 0;
+
     double position_rotation_sensor = 0;
     double adjusted_rotation = 0;
 
@@ -87,6 +92,9 @@ public:
         // update current positon
         /* #region update position */
 
+        velocity = (static_cast<double>(forwardRotation.get_velocity()) / FORWARD_SENSOR_TICKS_TO_INCHES); 
+        velocity_x = cos(position_rotation_rad) * velocity;
+        velocity_y = sin(position_rotation_rad) * velocity;
 
         position_x = position_x + (cos(position_rotation_rad) * deltaPos);
         position_y = position_y + (sin(position_rotation_rad) * deltaPos);
