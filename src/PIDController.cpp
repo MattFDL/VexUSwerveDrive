@@ -1,6 +1,7 @@
-#include <cmath>
 #ifndef PIDCONTROLLER //I think this needs to be added to be used in multiple files
 #define PIDCONTROLLER
+
+#include <cmath>
 
 class PIDController
 {
