@@ -2,6 +2,10 @@
 #include <cmath>
 #include "pros/rotation.hpp"
 #include "pros/imu.hpp"
+#include "pros/screen.hpp"
+
+#ifndef ODOMETRY
+#define ODOMETRY
 
 class odometry
 {
@@ -16,6 +20,7 @@ public:
 
     double position_rotation_sensor = 0;
     double adjusted_rotation = 0;
+    double position_rotation_sensor_pre = 0;
 
     double position_rotation_imu = 0; // imu heading
     double forward_count_pre = 0;     // forward rotation sensor previous count
@@ -26,14 +31,20 @@ public:
     double current_reading_imu_pid = 0; //Unused Currently, might be implemented later
 
     //CONSTANTS FOR DISTANCE CALCULATIONS
-    #define ROTATION_SENSOR_TICKS_TO_FULL_TURNS 143580.0 //This value was determined experimentally (in 360 turns)
-    #define FORWARD_SENSOR_TICKS_TO_INCHES 5243.0 //This value was determined experimentally (in inches)
+    double const ROTATION_SENSOR_TICKS_TO_FULL_TURNS = 143580.0; //This value was determined experimentally (in 360 turns)
+    double const FORWARD_SENSOR_TICKS_TO_INCHES = 5243.0; //This value was determined experimentally (in inches)
 
-    double test = 0; // testing purposes curently unused
+    double totalPosition = 0; // testing purposes curently unused
+    double preTotalPosition = 0; 
+
+
+    double rotation_count_ticks_pre = 0;
+    double forward_count_ticks_pre = 0;
+
 
     // SENSOR REFERENCES
-    pros::Rotation forwardRotation;  // forward rotation sensor
-    pros::Rotation sidewaysRotation; // rear rotation sensor
+    pros::Rotation &forwardRotation;  // forward rotation sensor
+    pros::Rotation &sidewaysRotation; // rear rotation sensor
     pros::IMU imu;                   // inertial measurement unit
 
     // Constructor
@@ -47,10 +58,18 @@ public:
         imu.reset();
     }
 
+    void set_start_position(double start_x, double start_y, double start_theta) {
+        position_x = start_x;
+        position_y = start_y;
+        position_rotation_sensor = start_theta;
+        imu.set_heading(start_theta);
+        
+    }
+
     void calculate_postition() {
         double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / ROTATION_SENSOR_TICKS_TO_FULL_TURNS); 
         double forward_count_inches = (static_cast<double>(forwardRotation.get_position()) / FORWARD_SENSOR_TICKS_TO_INCHES); 
-        test = forward_count_inches;
+        totalPosition = forward_count_inches;
     
         double deltaRotationSensorTurns = rotation_count_turns - rotation_count_pre;
         double deltaDegrees = deltaRotationSensorTurns * 360.0;
@@ -59,11 +78,6 @@ public:
 
         // change in forward distance
         double deltaPos = forward_count_inches - forward_count_pre; 
-
-        // update previous counts
-        rotation_count_pre = rotation_count_turns;
-        forward_count_pre = forward_count_inches;
-        /* #endregion */
 
         // update heading based on either imu or rotation sensor
         /* #region update heading */
@@ -77,7 +91,8 @@ public:
         */
 
         // calculate current heading in radians
-        adjusted_rotation = inputModulus(position_rotation_sensor, -180, 180);
+        adjusted_rotation = inputModulus((position_rotation_sensor + position_rotation_sensor_pre) * 0.5, -180, 180);  
+        //average rotation between time steps
 
         double position_rotation_rad = adjusted_rotation * (M_PI / 180.0);
         if (use_imu)
@@ -91,16 +106,45 @@ public:
 
         // update current positon
         /* #region update position */
-
-        velocity = (static_cast<double>(forwardRotation.get_velocity()) / FORWARD_SENSOR_TICKS_TO_INCHES); 
-        velocity_x = cos(position_rotation_rad) * velocity;
-        velocity_y = sin(position_rotation_rad) * velocity;
+        // velocity = (static_cast<double>(forwardRotation.get_velocity()) / FORWARD_SENSOR_TICKS_TO_INCHES); 
+        // velocity_x = cos(position_rotation_rad) * velocity;
+        // velocity_y = sin(position_rotation_rad) * velocity;
 
         position_x = position_x + (cos(position_rotation_rad) * deltaPos);
         position_y = position_y + (sin(position_rotation_rad) * deltaPos);
 
         /* #endregion */
+
+         // update previous counts
+        
+        rotation_count_pre = rotation_count_turns;
+        forward_count_pre = forward_count_inches;
+        position_rotation_sensor_pre = position_rotation_sensor;
+        calculateVelocity();
     }
+       
+
+
+    uint32_t previousTime = pros::millis();
+    void calculateVelocity() {
+        uint32_t currentTime = pros::millis();
+        double dt = (currentTime - previousTime) / 1000.0;
+        if (dt <= 0) {
+            dt=0.001;
+        }
+
+        //pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "DT: %f", dt);
+
+        velocity = (totalPosition - preTotalPosition) / dt;
+        // velocity_x = cos(position_rotation_rad) * velocity;
+        // velocity_y = sin(position_rotation_rad) * velocity;
+
+        preTotalPosition = totalPosition;  
+        previousTime = currentTime;
+
+    }
+
+
     double get_imu_reading() {
         double reading_adjusted = (180 - imu.get_heading()); 
         // TODO:  might need to do PID stuff here.
@@ -127,3 +171,4 @@ public:
         return value;
     }
 };
+#endif

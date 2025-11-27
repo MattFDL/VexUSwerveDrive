@@ -4,6 +4,7 @@
 #include "PIDController.cpp"
 #include "Autonomous/Path.cpp"
 #include "Autonomous/Point2D.cpp"
+#include "Autonomous/PathFollower.cpp"
 
 /**
  * A callback function for LLEMU's center button.
@@ -94,7 +95,9 @@ std::atomic<std::array<double, 3>> myAtomicStdArray;
 // 	}
 
 // }; TODO Threading later :----D
-Path path(Point2D(10, 10), Point2D(30, 100), Point2D(100, 200), Point2D(200, 10));
+//Path path(Point2D(0, 0), Point2D(10, -10), Point2D(20, 10), Point2D(30, 0));
+Path path(Point2D(0, 0), Point2D(40, 0), Point2D(40, 30), Point2D(0, 30));
+Path path2(Point2D(0, 30), Point2D(40, 30), Point2D(40, 0), Point2D(0, 0));
 
 
 void test_function()
@@ -109,7 +112,7 @@ void test_function()
 		int y = (int)num.y;
 		pros::screen::draw_pixel(x, y);
 	}
-	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Length: %f", path.curve_length);
+	//pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Length: %f", path.curve_length);
 }
 
 void opcontrol()
@@ -118,6 +121,7 @@ void opcontrol()
 	// pros::Task odom_task(odometry_thread); Threading for later ;) :O
 
 	odom.reset_sensors();
+	//odom.set_start_position(0, 0, 180);
 
 	PIDController pid(80.0, 35.0, 0.0); // 20.0
 	pid.enableContinuousInput(-180, 180);
@@ -127,13 +131,24 @@ void opcontrol()
 	pid.setIzone(30);
 	pid.setMaxMinI(4000, -4000);
 
-	path.setStepCount(30);
-	path.generateLinearPath();
+	path.setStepCount(100);
+	path.generateCubicPathEquation();
 	path.resizeCurve();
+
+	path2.setStepCount(100);
+	path2.generateCubicPathEquation();
+	path2.resizeCurve();
 
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::MotorGroup left_mg({-10, -9, 2, -1});	  // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-	pros::MotorGroup right_mg({20, 18, -12, 11}); // Creates a motor group with forwards port 5 and reversed ports 4 & 6
+	pros::MotorGroup right_mg({20, 19, -12, 11}); // Creates a motor group with forwards port 5 and reversed ports 4 & 6
+
+	PathFollower follower(odom, right_mg, left_mg);
+	follower.setPath(path);
+
+	PathFollower follower2(odom, right_mg, left_mg);
+	follower2.setPath(path2);
+	
 
 	while (true)
 	{
@@ -145,32 +160,49 @@ void opcontrol()
 		// // Arcade control scheme
 		odom.calculate_postition();
 
-		// int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
-		// int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
-		int turn = 0;
+		//int turn = 0;
 
 		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 		{
-			turn = (int)pid.calculate(odom.adjusted_rotation, 90);
+			//turn = (int)pid.calculate(odom.adjusted_rotation, 90);
+			//follower.followPath();
+			if (!follower.pathFinished) {
+				follower.followPath(odom.position_x, odom.position_y, odom.adjusted_rotation);
+				pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 10, "PathFinished: %f", follower.pathFinished);
+			} else {
+				follower2.followPathBackwards(odom.position_x, odom.position_y, odom.adjusted_rotation);
+			}
+
+			
+			//follower.driveMotor(step * loopCount, step * loopCount);
+			
+			
 		}
 		else
 		{
-			turn = 0;
+			left_mg.move_voltage(0);
+		    right_mg.move_voltage(0);
 		}
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Turn: %i", turn);
 
-		// left_mg.move(dir - turn);                      // Sets left motor voltage
-		// right_mg.move(dir + turn);                     // Sets right motor voltage
-		left_mg.move_voltage(turn);
-		right_mg.move_voltage(-turn);
+		// int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
+		// int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
 
-		odom.calculate_postition();
+		// left_mg.move(dir + turn);                      // Sets left motor voltage
+		// right_mg.move(dir - turn);                     // Sets right motor voltage
+		// left_mg.move_voltage(turn);
+		// right_mg.move_voltage(-turn);
 
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading_Sensor: %f", odom.adjusted_rotation);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Heading_IMU: %f", odom.position_rotation_imu);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading_Sensor: %f", odom.adjusted_rotation);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Heading_IMU: %f", odom.position_rotation_imu);
 		//pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Test: %f", odom.test);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Angular: %f", follower.test1_ang);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Vel Left: %f", follower.testx_vel);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Vel Right: %f", follower.testy_vel);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "Heading Error: %f", (follower.heading_error_test / M_PI) * 180);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Velocity: %f", odom.velocity);
 
 		test_function();
 

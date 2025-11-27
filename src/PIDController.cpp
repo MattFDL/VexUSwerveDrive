@@ -67,6 +67,10 @@ public:
         error_tolerance = error_val;
     }
 
+    bool atTolerance() {
+        return (std::abs(m_error) < error_tolerance);
+    }
+
     void setPeriod(double period)
     {
         // use this method to set the cycle times on the PID controller.

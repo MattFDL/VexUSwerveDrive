@@ -14,8 +14,19 @@ class FeedForwardBasic {
     kA(kVoltsPerInchesPerSecondSquared)
     {}
 
-    double calculateVolts(double targetInPerSec) {
-        return (kS + kV * targetInPerSec); //Implement kA later...
+   double calculateVolts(double targetInPerSec) { //incorperate kA into this later
+        if (targetInPerSec < 0) {
+            double volts = (-kS + targetInPerSec * kV);
+            if (volts < -12) {
+                volts = -12;
+            }
+            return volts;
+        }
+        double volts = (kS + targetInPerSec * kV);
+        if (volts > 12) {
+            volts = 12;
+        }
+        return volts;
     }
 
     double simpleCalculateVolts(double targetInPerSec) {

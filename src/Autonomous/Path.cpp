@@ -2,6 +2,8 @@
 #include <vector>
 #include "AutoUtility.h"
 #include <cmath>
+#ifndef PATH
+#define PATH
 
 // Probably put guards in here eventually (#pragma once)
 
@@ -178,3 +180,4 @@ public:
         curvePoints = std::move(newCurvePoints);
     }
 };
+#endif
