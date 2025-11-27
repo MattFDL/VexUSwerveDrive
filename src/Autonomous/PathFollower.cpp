@@ -3,8 +3,8 @@
 #include "pros/motor_group.hpp"
 #include "Path.cpp"
 #include "VelocityConstraints.cpp"
-#include "AutoUtility.h"
 #include "FeedForwardBasic.cpp"
+#include "CommonUtility.h"
 
 class PathFollower
 {
@@ -21,10 +21,6 @@ public:
     const double LOOKAHEAD_DISTANCE = 1.5; /// Might want to not use a constant and change this value in respect to current velocity
     //Anything lower than 1.5 seems to not work
     const double TRACK_WIDTH = 10.0;
-    double test1_ang = 0;
-    double testx_vel = 0;
-    double testy_vel = 0;
-    double heading_error_test = 0;
     PIDController lastPostionPID = PIDController(2.0, 0.1, 0);
     PIDController rotationPID = PIDController(20.0, 3.0, 0); // PIDController(4.0, 1.8, 0);
 
@@ -78,7 +74,7 @@ public:
         double vel = 8;                              // constraints.getCurrentVelocity(currentTime, path.curve_length);
         
         // or use the IMU both should be on the interval [-Pi, Pi]
-        double adjusted_look_distance = (vel / 8.0) * LOOKAHEAD_DISTANCE;
+        double adjusted_look_distance = (vel / 6.0) * LOOKAHEAD_DISTANCE;
 
         int lookAhead_index = findLookAheadPoint(adjusted_look_distance, x, y);
 
@@ -130,13 +126,7 @@ public:
         double vel_left = vel - (angular_vel * 0.5 * TRACK_WIDTH);
         double vel_right = vel + (angular_vel * 0.5 * TRACK_WIDTH);
 
-        test1_ang = angular_vel;
-        testx_vel = vel_left;
-        testy_vel = vel_right;
-        heading_error_test = heading_error;
-
         driveMotorVelocity(vel_left, vel_right);
-
     }
 
     void followPathBackwards(double m_x, double m_y, double heading) //maybe pass velocity into here as well
@@ -197,16 +187,10 @@ public:
         double vel_left = vel + (angular_vel * 0.5 * TRACK_WIDTH);
         double vel_right = vel - (angular_vel * 0.5 * TRACK_WIDTH);
 
-        test1_ang = angular_vel;
-        testx_vel = vel_left;
-        testy_vel = vel_right;
-        heading_error_test = heading_error;
         pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Velocity Left: %f", vel_left);
         pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Velocity Right: %f", vel_right);
         pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Heading Error: %f", heading_error);
         pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "Angular: %f", angular_vel);
-
-
 
         driveMotorVelocity(vel_left, vel_right);
 
@@ -247,23 +231,5 @@ public:
         // error keeps increasing
         // however, this algorithm 100% works
         return lookahead_index;
-    }
-    double inputModulus(double val, double min, double max)
-    {
-        // Keeps the value within the interval min to max
-        // This should be used on the rotation readings for consistency purposes
-
-        // Might move this function into a public file that can be used everywhere
-        // Because it is also used in PIDController
-        double value = val;
-        double modulus = max - min;
-
-        int numMax = (int)((value - min) / modulus);
-        value -= numMax * modulus;
-
-        int numMin = (int)((value - max) / modulus);
-        value -= numMin * modulus;
-
-        return value;
     }
 };

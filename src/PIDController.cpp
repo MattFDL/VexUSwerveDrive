@@ -2,6 +2,7 @@
 #define PIDCONTROLLER
 
 #include <cmath>
+#include "CommonUtility.h"
 
 class PIDController
 {
@@ -141,38 +142,6 @@ public:
             return 0;
         }
         return kP * m_error + kI * m_totalError + kD * m_errorDerivative;
-    }
-
-    //These can be private methods
-    //Used to clamp val between min and max
-    double clamp(double val, double min, double max)
-    {
-        double value = val;
-        if (value > max)
-        {
-            value = max;
-        }
-        else if (value < min)
-        {
-            value = min;
-        }
-        return value;
-    }
-    //Used to keep the input val between min and max
-    double inputModulus(double val, double min, double max)
-    {
-        double value = val;
-        double modulus = max - min;
-
-        int numMax = (int)((value - min) / modulus); 
-        //casting to int should round down to nearest int (if it works the same as in java)
-        value -= numMax * modulus;
-
-        int numMin = (int)((value - max) / modulus); 
-        //casting to int should round down to nearest int (if it works the same as in java)
-        value -= numMin * modulus;
-
-        return value;
     }
 };
 #endif

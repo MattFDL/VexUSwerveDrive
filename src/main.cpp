@@ -160,23 +160,14 @@ void opcontrol()
 		// // Arcade control scheme
 		odom.calculate_postition();
 
-		//int turn = 0;
-
 		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 		{
-			//turn = (int)pid.calculate(odom.adjusted_rotation, 90);
-			//follower.followPath();
 			if (!follower.pathFinished) {
-				follower.followPath(odom.position_x, odom.position_y, odom.adjusted_rotation);
+				follower.followPath(odom.position_x, odom.position_y, odom.rotation);
 				pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 10, "PathFinished: %f", follower.pathFinished);
 			} else {
-				follower2.followPathBackwards(odom.position_x, odom.position_y, odom.adjusted_rotation);
-			}
-
-			
-			//follower.driveMotor(step * loopCount, step * loopCount);
-			
-			
+				follower2.followPathBackwards(odom.position_x, odom.position_y, odom.rotation);
+			}			
 		}
 		else
 		{
@@ -195,8 +186,7 @@ void opcontrol()
 
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading_Sensor: %f", odom.adjusted_rotation);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Heading_IMU: %f", odom.position_rotation_imu);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
 		//pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Test: %f", odom.test);
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Angular: %f", follower.test1_ang);
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Vel Left: %f", follower.testx_vel);
@@ -206,7 +196,7 @@ void opcontrol()
 
 		test_function();
 
-		pros::delay(20); // Run for 20 ms then update
+		pros::delay(10); // Run for 20 ms then update
 
 		// TODO: change everything (that you can) to references
 	}
