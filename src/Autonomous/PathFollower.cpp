@@ -12,7 +12,7 @@ private:
     pros::MotorGroup &right_mg;
     pros::MotorGroup &left_mg;
     Path path = Path();
-    odometry odom;
+    odometry &odom;
 
 public:
     //VelocityContraints constraints = VelocityContraints(5.0, 15.0);
@@ -21,10 +21,11 @@ public:
     const double LOOKAHEAD_DISTANCE = 1.5; /// Might want to not use a constant and change this value in respect to current velocity
     //Anything lower than 1.5 seems to not work
     const double TRACK_WIDTH = 10.0;
-    PIDController lastPostionPID = PIDController(2.0, 0.1, 0);
+    PIDController lastPostionPID = PIDController(3.0, 0.5, 0);
     PIDController rotationPID = PIDController(20.0, 3.0, 0); // PIDController(4.0, 1.8, 0);
 
     bool startPID = false;
+    bool startDistancePID = false;
 
     const double kS = 0.4;
     const double kV = 0.19607;
@@ -36,7 +37,8 @@ public:
     {
         lastPostionPID.setIzone(5);
         lastPostionPID.setMaxMinI(10, -10);
-        lastPostionPID.setErrorTolerance(0.3);
+        //lastPostionPID.setErrorTolerance(0.3);
+        lastPostionPID.setErrorTolerance(0.6);
         rotationPID.enableContinuousInput(-M_PI, M_PI);
         rotationPID.setIzone(0.4);
         rotationPID.setMaxMinI(10, -10);
@@ -63,26 +65,33 @@ public:
     void resetPath() {
         pathFinished = false; 
         startPID = false;
+        startDistancePID = false; 
     }
 
-    void followPath(double m_x, double m_y, double heading) //maybe pass velocity into here as well
+    void followPath(bool backwards=false) //maybe pass velocity into here as well
     {   
-        double x = m_x; // odom.position_x;
-        double y = m_y; // odom.position_y;
+        double x = odom.position_x;//m_x; // odom.position_x;
+        double y = odom.position_y; // odom.position_y;
+        double heading = odom.rotation;
 
-        double heading_rad = (heading / 180) * M_PI; //(odom.position_rotation_sensor / 180) * M_PI;
-        double vel = 8;                              // constraints.getCurrentVelocity(currentTime, path.curve_length);
+        double heading_rad = (heading / 180) * M_PI;//(heading / 180) * M_PI; //(odom.position_rotation_sensor / 180) * M_PI;
+        if (backwards) {
+            heading_rad = inputModulus((((heading + 180) / 180) * M_PI), -M_PI, M_PI); 
+        }
+        double vel = 15;                              // constraints.getCurrentVelocity(currentTime, path.curve_length);
         
         // or use the IMU both should be on the interval [-Pi, Pi]
         double adjusted_look_distance = (vel / 6.0) * LOOKAHEAD_DISTANCE;
+        if (backwards) {
+            vel = vel * -1;
+        }
 
         int lookAhead_index = findLookAheadPoint(adjusted_look_distance, x, y);
 
         Point2D look_ahead_point = path.curvePoints[lookAhead_index];
-        double heading_error = inputModulus(std::atan2(look_ahead_point.y - y, look_ahead_point.x - x) - heading_rad, -M_PI, M_PI);
-       
+        double heading_error = inputModulus(std::atan2(look_ahead_point.y - y, look_ahead_point.x - x) - heading_rad, -M_PI, M_PI);      
 
-        if (((calculateDistance(Point2D(x, y), path.curvePoints.back()) < 5) && (std::abs(heading_error) < 0.3)) || startPID)
+        if ((calculateDistance(Point2D(x, y), path.curvePoints.back()) < (adjusted_look_distance * 3)) || startPID) //&& (std::abs(heading_error) < 0.3))
         {
             startPID = true;
             // maybe two stages, one for squaring up with target the other for driving to target
@@ -90,8 +99,12 @@ public:
             double pid_heading_error = inputModulus(std::atan2(pid_point.y - y, pid_point.x - x) - heading_rad, -M_PI, M_PI);
             double rot_value = rotationPID.calculate(pid_heading_error, 0);
 
-            if (!rotationPID.atTolerance() )
-            { //&& (calculateDistance(Point2D(x, y), path.curvePoints.back()) > 1)) {
+            // if (rotationPID.atTolerance()) {
+            //     startDistancePID = true; 
+            // }
+
+            if (!rotationPID.atTolerance() && (calculateDistance(Point2D(x, y), path.curvePoints.back()) > 1.5))
+            { 
                 double rot_value = rotationPID.calculate(pid_heading_error, 0);
                 driveMotorVelocity(rot_value, -rot_value);
                 return;
@@ -105,6 +118,9 @@ public:
             }
 
             double vel = lastPostionPID.calculate(input, 0);
+            if (backwards) {
+                vel = vel * -1;
+            }
             if (!lastPostionPID.atTolerance())
             {
                 driveMotorVelocity(-vel, -vel);
@@ -122,6 +138,9 @@ public:
         double curvature = 2 * std::sin(heading_error) / adjusted_look_distance;
         // rate in change in direction of a curve at a specific point
         double angular_vel = vel * curvature;
+        if (backwards) {
+            angular_vel = angular_vel * -1; 
+        }
 
         double vel_left = vel - (angular_vel * 0.5 * TRACK_WIDTH);
         double vel_right = vel + (angular_vel * 0.5 * TRACK_WIDTH);
@@ -129,71 +148,10 @@ public:
         driveMotorVelocity(vel_left, vel_right);
     }
 
-    void followPathBackwards(double m_x, double m_y, double heading) //maybe pass velocity into here as well
+    void followPathBackwards() 
     {   
-        double x = m_x; // odom.position_x;
-        double y = m_y; // odom.position_y;
-
-        double heading_rad = inputModulus((((heading + 180) / 180) * M_PI), -M_PI, M_PI); //+180 for backwards
-        double vel = 8;
-
-        double adjusted_look_distance = (vel / 6.0) * LOOKAHEAD_DISTANCE;
-
-        vel = vel * -1; //negative vel for backwards has to be after the look distance is calculated
-
-
-        int lookAhead_index = findLookAheadPoint(adjusted_look_distance, x, y);
-
-        Point2D look_ahead_point = path.curvePoints[lookAhead_index];
-        double heading_error = inputModulus(std::atan2(look_ahead_point.y - y, look_ahead_point.x - x) - heading_rad, -M_PI, M_PI);
-
-        if (((calculateDistance(Point2D(x, y), path.curvePoints.back()) < 5) && (std::abs(heading_error) < 0.3)) || startPID)
-        {
-            startPID = true;
-            // maybe two stages, one for squaring up with target the other for driving to target
-            Point2D pid_point = path.curvePoints.back();
-            double pid_heading_error = inputModulus(std::atan2(pid_point.y - y, pid_point.x - x) - heading_rad, -M_PI, M_PI);
-            double rot_value = rotationPID.calculate(pid_heading_error, 0);
-
-            if (!rotationPID.atTolerance() && (calculateDistance(Point2D(x, y), path.curvePoints.back()) > 1))
-            { 
-                double rot_value = rotationPID.calculate(pid_heading_error, 0);
-                driveMotorVelocity(rot_value, -rot_value);
-                return;
-            }
-
-            double input = calculateDistance(path.curvePoints.back(), Point2D(x, y));
-
-            if (pid_heading_error > 2.6 || pid_heading_error < -2.6)
-            {
-                input = -input;
-            }
-
-            double vel = lastPostionPID.calculate(input, 0);
-            if (!lastPostionPID.atTolerance())
-            {
-                driveMotorVelocity(vel, vel); //reversed for backwards
-            } else {
-                driveMotorVelocity(0, 0);
-                pathFinished = true;
-            }
-            return;
-        }
-
-        double curvature = 2 * std::sin(heading_error) / adjusted_look_distance;
-        // rate in change in direction of a curve at a specific point
-        double angular_vel = vel * curvature;
-
-        double vel_left = vel + (angular_vel * 0.5 * TRACK_WIDTH);
-        double vel_right = vel - (angular_vel * 0.5 * TRACK_WIDTH);
-
-        pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Velocity Left: %f", vel_left);
-        pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Velocity Right: %f", vel_right);
-        pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Heading Error: %f", heading_error);
-        pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "Angular: %f", angular_vel);
-
-        driveMotorVelocity(vel_left, vel_right);
-
+        followPath(true);
+        return;
     }
 
     int findLookAheadPoint(double lookahead, double x, double y)

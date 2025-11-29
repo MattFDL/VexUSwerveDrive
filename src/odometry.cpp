@@ -34,6 +34,7 @@ public:
     double velocity = 0;
 
     double rotation = 0;
+    double angular_velocity = 0;
 
     // use IMU for secondary heading claulation
     bool use_imu = false;
@@ -65,7 +66,7 @@ public:
     */
 
     //CONSTANTS FOR DISTANCE CALCULATIONS
-    double const ROTATION_SENSOR_TICKS_TO_FULL_TURNS = 143580.0; //This value was determined experimentally (in 360 turns)
+    double const ROTATION_SENSOR_TICKS_TO_FULL_TURNS = 139293;//143580.0; //This value was determined experimentally (in 360 turns)
     double const FORWARD_SENSOR_TICKS_TO_INCHES = 5243.0; //This value was determined experimentally (in inches)
 
     // Constructor
@@ -90,7 +91,7 @@ public:
     void calculate_postition() {
         double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / ROTATION_SENSOR_TICKS_TO_FULL_TURNS); 
         double forward_count_inches = (static_cast<double>(forwardRotation.get_position()) / FORWARD_SENSOR_TICKS_TO_INCHES); 
-    
+        
         double deltaDegrees = (rotation_count_turns - rotation_count_pre) * 360.0;
         
         position_rotation_sensor += deltaDegrees;
@@ -117,7 +118,8 @@ public:
         if (dt <= 0) {
             dt=0.001;
         }
-        velocity = (forward_count_inches - forward_count_pre) / dt;
+        velocity = deltaPos / dt;
+        angular_velocity = deltaDegrees / dt;
         // velocity_x = cos(position_rotation_rad) * velocity;
         // velocity_y = sin(position_rotation_rad) * velocity;
 

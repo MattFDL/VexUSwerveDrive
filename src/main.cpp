@@ -163,10 +163,10 @@ void opcontrol()
 		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
 		{
 			if (!follower.pathFinished) {
-				follower.followPath(odom.position_x, odom.position_y, odom.rotation);
+				follower.followPath();
 				pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 10, "PathFinished: %f", follower.pathFinished);
 			} else {
-				follower2.followPathBackwards(odom.position_x, odom.position_y, odom.rotation);
+				follower2.followPathBackwards();
 			}			
 		}
 		else
@@ -181,13 +181,13 @@ void opcontrol()
 
 		// left_mg.move(dir + turn);                      // Sets left motor voltage
 		// right_mg.move(dir - turn);                     // Sets right motor voltage
-		// left_mg.move_voltage(turn);
+		// // left_mg.move_voltage(turn);
 		// right_mg.move_voltage(-turn);
 
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
-		//pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Test: %f", odom.test);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Angular Velocty: %f", odom.angular_velocity);
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Angular: %f", follower.test1_ang);
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Vel Left: %f", follower.testx_vel);
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Vel Right: %f", follower.testy_vel);
