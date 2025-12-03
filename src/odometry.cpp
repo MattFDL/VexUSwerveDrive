@@ -22,7 +22,7 @@ private:
     // SENSOR REFERENCES
     pros::Rotation &forwardRotation;  // forward rotation sensor
     pros::Rotation &sidewaysRotation; // rear rotation sensor
-    pros::IMU imu;                   // inertial measurement unit
+    pros::IMU &imu;                   // inertial measurement unit
 
 public:
     // position variables
@@ -37,7 +37,8 @@ public:
     double angular_velocity = 0;
 
     // use IMU for secondary heading claulation
-    bool use_imu = false;
+    bool use_imu = true;
+    double rotation_addition_imu = 0;
 
     /*
     USE THIS FOR THREADING:
@@ -77,15 +78,14 @@ public:
         forwardRotation.reset_position();
         sidewaysRotation.reset();
         sidewaysRotation.reset_position();
-        imu.reset();
+        imu.reset(true); //blocking
     }
 
     void set_start_position(double start_x, double start_y, double start_theta) {
         position_x = start_x;
         position_y = start_y;
         position_rotation_sensor = start_theta;
-        imu.set_heading(start_theta);
-        
+        imu.set_heading(start_theta); 
     }
 
     void calculate_postition() {

@@ -5,6 +5,8 @@
 #include "Autonomous/Path.cpp"
 #include "Autonomous/Point2D.cpp"
 #include "Autonomous/PathFollower.cpp"
+#include "Autonomous/AutoBuilder.cpp"
+#include "Autonomous/Command.cpp"
 
 /**
  * A callback function for LLEMU's center button.
@@ -82,7 +84,7 @@ void autonomous() {}
  */
 pros::Rotation forwardRot(4);
 pros::Rotation sidewaysRot(-14);
-pros::IMU imu(17); // TODO get the correct port number
+pros::IMU imu(7); // TODO get the correct port number
 
 odometry odom(forwardRot, sidewaysRot, imu);
 
@@ -121,7 +123,7 @@ void opcontrol()
 	// pros::Task odom_task(odometry_thread); Threading for later ;) :O
 
 	odom.reset_sensors();
-	//odom.set_start_position(0, 0, 180);
+	odom.set_start_position(0, 0, 90);
 
 	PIDController pid(80.0, 35.0, 0.0); // 20.0
 	pid.enableContinuousInput(-180, 180);
@@ -167,7 +169,7 @@ void opcontrol()
 				pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 10, "PathFinished: %f", follower.pathFinished);
 			} else {
 				follower2.followPathBackwards();
-			}			
+			}
 		}
 		else
 		{
