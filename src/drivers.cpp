@@ -18,7 +18,7 @@ class driverControls{
         void handleInputs(){
             switch (user){
                 case 0:
-                    preset_IDK();
+                    preset_RC();
                     break;
                 case 1:
                     preset_tank();
@@ -49,7 +49,7 @@ class driverControls{
             int32_t output = (input)*(pow(input/127.0,2));
             return output;
         }
-        void preset_IDK(){
+        void preset_RC(){
                                          // Run for 20 ms then update
             left_Y=controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
             left_X=controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
@@ -64,17 +64,22 @@ class driverControls{
             } else {
                 intakeMotors.brake();
             }
+
+
             int32_t forward = left_Y;
             int32_t turn;
+            
             if(abs(left_X) > abs(right_X)) {
                 turn = left_X;
             } else {
                 turn = right_X;
             }
             
+
             forward=deadzoneCalc(forward, deadzone);
             turn=deadzoneCalc(turn, deadzone);
             
+
             int32_t left=forward+(turn*.8);
             int32_t right=forward-(turn*.8);
             if (abs(left)>0){leftMotors.move(left);}
