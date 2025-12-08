@@ -1,5 +1,5 @@
-#ifndef PNEUMATICS_H
-#define PNEUMATICS_H
+#ifndef PNEUMATICS
+#define PNEUMATICS
 
 #include "pros/adi.hpp" // Used to for Digital Port Write access
 #include "pros/rtos.hpp" // Included for delay if needed
