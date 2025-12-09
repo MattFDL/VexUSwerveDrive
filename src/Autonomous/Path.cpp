@@ -2,6 +2,7 @@
 #include <vector>
 #include "AutoUtility.h"
 #include <cmath>
+#include <string>
 #ifndef PATH
 #define PATH
 
@@ -14,6 +15,7 @@ public:
     Point2D end_position = Point2D(0, 0);
     Point2D control_point_1 = Point2D(0, 0);
     Point2D control_point_2 = Point2D(0, 0);
+    std::string name = "default";
 
     bool linear = false;
     bool quadratic = false;
@@ -58,6 +60,7 @@ public:
 
     void generatePath()
     {
+        setStepCount(200);
         if (linear)
         {
             generateLinearPath();
@@ -70,6 +73,7 @@ public:
         {
             generateCubicPathEquation();
         }
+        resizeCurve();
     }
 
     // void generateCubicPath()
@@ -150,7 +154,7 @@ public:
         }
     }
 
-    void resizeCurve(double distance_threshold = 0.1)
+    void resizeCurve(double distance_threshold = 0.05)
     { // hopefully I implemented this correctly
         std::vector<Point2D> newCurvePoints;
 

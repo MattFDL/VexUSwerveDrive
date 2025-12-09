@@ -21,7 +21,7 @@ private:
 
     // SENSOR REFERENCES
     pros::Rotation &forwardRotation;  // forward rotation sensor
-    pros::Rotation &sidewaysRotation; // rear rotation sensor
+    //pros::Rotation &sidewaysRotation; // rear rotation sensor
     pros::IMU &imu;                   // inertial measurement unit
 
 public:
@@ -32,6 +32,8 @@ public:
     double velocity_x = 0;
     double velocity_y = 0;
     double velocity = 0;
+    double previous_velocity = 0;
+    double gain = 0.7; 
 
     double rotation = 0;
     double angular_velocity = 0;
@@ -71,13 +73,13 @@ public:
     double const FORWARD_SENSOR_TICKS_TO_INCHES = 5243.0; //This value was determined experimentally (in inches)
 
     // Constructor
-    odometry(pros::Rotation &forward, pros::Rotation &sideways, pros::IMU &i) : forwardRotation(forward), sidewaysRotation(sideways), imu(i) {}
+    odometry(pros::Rotation &forward, pros::IMU &i) : forwardRotation(forward), imu(i) {}
 
     void reset_sensors() {
         forwardRotation.reset(); //* DO NOT PUT IN CONSTRUCTOR PLEASE THIS CRASHES THINGS
         forwardRotation.reset_position();
-        sidewaysRotation.reset();
-        sidewaysRotation.reset_position();
+        //sidewaysRotation.reset();
+        //sidewaysRotation.reset_position();
         imu.reset(true); //blocking
     }
 
@@ -89,12 +91,12 @@ public:
     }
 
     void calculate_postition() {
-        double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / ROTATION_SENSOR_TICKS_TO_FULL_TURNS); 
+        //double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / ROTATION_SENSOR_TICKS_TO_FULL_TURNS); 
         double forward_count_inches = (static_cast<double>(forwardRotation.get_position()) / FORWARD_SENSOR_TICKS_TO_INCHES); 
         
-        double deltaDegrees = (rotation_count_turns - rotation_count_pre) * 360.0;
+        //double deltaDegrees = (rotation_count_turns - rotation_count_pre) * 360.0;
         
-        position_rotation_sensor += deltaDegrees;
+        //position_rotation_sensor += deltaDegrees;
 
         // change in forward distance
         double deltaPos = forward_count_inches - forward_count_pre; 
@@ -118,8 +120,10 @@ public:
         if (dt <= 0) {
             dt=0.001;
         }
-        velocity = deltaPos / dt;
-        angular_velocity = deltaDegrees / dt;
+        double current_velocity = deltaPos / dt;
+        velocity = previous_velocity * gain + (1-gain) * current_velocity; //this softens the velocity readings
+        previous_velocity = current_velocity;
+        //angular_velocity = deltaDegrees / dt;
         // velocity_x = cos(position_rotation_rad) * velocity;
         // velocity_y = sin(position_rotation_rad) * velocity;
 
@@ -129,7 +133,7 @@ public:
 
          // update previous counts        
         previousTime = currentTime;
-        rotation_count_pre = rotation_count_turns;
+        //rotation_count_pre = rotation_count_turns;
         forward_count_pre = forward_count_inches;
         position_rotation_sensor_pre = position_rotation_sensor;
     }

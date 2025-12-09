@@ -24,14 +24,16 @@ public:
     PIDController lastPostionPID = PIDController(3.0, 0.5, 0);
     PIDController rotationPID = PIDController(20.0, 3.0, 0); // PIDController(4.0, 1.8, 0);
 
-    bool startPID = false;
-    bool startDistancePID = false;
-
-    const double kS = 0.4;
-    const double kV = 0.19607;
+    const double kS = 0.5025;//0.4;
+    const double kV = 0.22538;//0.19607;
     FeedForwardBasic ff = FeedForwardBasic(kS, kV, 0);
 
     bool pathFinished = false;
+    int ctrl = 0;
+    bool startPID = false;
+    bool startDistancePID = false;
+    int ctrlRot = 0;
+
 
     PathFollower(odometry &odometr, pros::MotorGroup &m_right, pros::MotorGroup &m_left) : odom(odometr), right_mg(m_right), left_mg(m_left)
     {
@@ -59,6 +61,7 @@ public:
     void setPath(Path m_path)
     {
         path = m_path;
+        resetPath();
     }
 
 
@@ -66,22 +69,41 @@ public:
         pathFinished = false; 
         startPID = false;
         startDistancePID = false; 
+        ctrl = 0; 
+        currentIndex = 0;
+        //currentTime = 0;
+        ctrlRot = 0;
+    }
+    bool rotateToDegrees(double degrees) {
+        double heading = odom.rotation;
+        double error_rads = inputModulus(((degrees - heading) * M_PI) / 180, -M_PI, M_PI);
+        double rot_value = rotationPID.calculate(error_rads, 0);
+        
+        if (rotationPID.atTolerance()) {
+            if (ctrl > 10) {
+                driveMotorVelocity(0, 0);
+                return true;
+            }
+            ctrl++;
+        } 
+        driveMotorVelocity(rot_value, -rot_value);
+        return false; 
     }
 
-    void followPath(bool backwards=false) //maybe pass velocity into here as well
+    bool followPath(bool backwards=false, double velocity = 8) //maybe pass velocity into here as well
     {   
         double x = odom.position_x;//m_x; // odom.position_x;
         double y = odom.position_y; // odom.position_y;
         double heading = odom.rotation;
 
         double heading_rad = (heading / 180) * M_PI;//(heading / 180) * M_PI; //(odom.position_rotation_sensor / 180) * M_PI;
-        if (backwards) {
-            heading_rad = inputModulus((((heading + 180) / 180) * M_PI), -M_PI, M_PI); 
-        }
-        double vel = 15;                              // constraints.getCurrentVelocity(currentTime, path.curve_length);
+        // if (backwards) {
+        //     heading_rad = inputModulus((((heading + 180) / 180) * M_PI), -M_PI, M_PI); 
+        // }
+        double vel = velocity;                              // constraints.getCurrentVelocity(currentTime, path.curve_length);
         
         // or use the IMU both should be on the interval [-Pi, Pi]
-        double adjusted_look_distance = (vel / 6.0) * LOOKAHEAD_DISTANCE;
+        double adjusted_look_distance = (vel / 4.0) * LOOKAHEAD_DISTANCE;
         if (backwards) {
             vel = vel * -1;
         }
@@ -91,13 +113,17 @@ public:
         Point2D look_ahead_point = path.curvePoints[lookAhead_index];
         double heading_error = inputModulus(std::atan2(look_ahead_point.y - y, look_ahead_point.x - x) - heading_rad, -M_PI, M_PI);      
 
-        if ((calculateDistance(Point2D(x, y), path.curvePoints.back()) < (adjusted_look_distance * 3)) || startPID) //&& (std::abs(heading_error) < 0.3))
+        if ((calculateDistance(Point2D(x, y), path.curvePoints.back()) < (adjusted_look_distance * 2)) || startPID) //&& (std::abs(heading_error) < 0.3))
         {
             startPID = true;
             // maybe two stages, one for squaring up with target the other for driving to target
             Point2D pid_point = path.curvePoints.back();
             double pid_heading_error = inputModulus(std::atan2(pid_point.y - y, pid_point.x - x) - heading_rad, -M_PI, M_PI);
+            if (backwards) {
+                pid_heading_error = inputModulus(std::atan2(pid_point.y - y, pid_point.x - x) - heading_rad + M_PI, -M_PI, M_PI);
+            }
             double rot_value = rotationPID.calculate(pid_heading_error, 0);
+            
 
             // if (rotationPID.atTolerance()) {
             //     startDistancePID = true; 
@@ -107,7 +133,7 @@ public:
             { 
                 double rot_value = rotationPID.calculate(pid_heading_error, 0);
                 driveMotorVelocity(rot_value, -rot_value);
-                return;
+                return false;
             }
 
             double input = calculateDistance(path.curvePoints.back(), Point2D(x, y));
@@ -121,14 +147,16 @@ public:
             if (backwards) {
                 vel = vel * -1;
             }
-            if (!lastPostionPID.atTolerance())
+            if (!lastPostionPID.atTolerance() || (ctrl > 50))
             {
                 driveMotorVelocity(-vel, -vel);
             } else {
                 driveMotorVelocity(0, 0);
                 pathFinished = true;
+                ctrl += 1;
+                return true; 
             }
-            return;
+            return false; 
         }
 
         // This will calculate the turning in order to follow the path
@@ -138,20 +166,20 @@ public:
         double curvature = 2 * std::sin(heading_error) / adjusted_look_distance;
         // rate in change in direction of a curve at a specific point
         double angular_vel = vel * curvature;
-        if (backwards) {
-            angular_vel = angular_vel * -1; 
-        }
+        // if (backwards) {
+        //     angular_vel = angular_vel * -1; 
+        // }
 
         double vel_left = vel - (angular_vel * 0.5 * TRACK_WIDTH);
         double vel_right = vel + (angular_vel * 0.5 * TRACK_WIDTH);
 
         driveMotorVelocity(vel_left, vel_right);
+        return false; 
     }
 
-    void followPathBackwards() 
+    bool followPathBackwards() 
     {   
-        followPath(true);
-        return;
+        return followPath(true); 
     }
 
     int findLookAheadPoint(double lookahead, double x, double y)
