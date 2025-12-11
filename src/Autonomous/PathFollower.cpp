@@ -1,3 +1,6 @@
+#ifndef PATHFOLLOWER
+#define PATHFOLLOWER
+
 #include "../PIDController.cpp" //change these to headers eventually
 #include "../odometry.cpp"      //change these to headers eventually
 #include "pros/motor_group.hpp"
@@ -5,6 +8,8 @@
 #include "VelocityConstraints.cpp"
 #include "FeedForwardBasic.cpp"
 #include "CommonUtility.h"
+
+
 
 class PathFollower
 {
@@ -219,3 +224,4 @@ public:
         return lookahead_index;
     }
 };
+#endif
