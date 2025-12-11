@@ -8,6 +8,7 @@
 #include "Autonomous/AutoBuilder.cpp"
 #include "Autonomous/Command.cpp"
 #include <functional>
+#include "Autonomous/Autos.cpp"
 
 #include "drivers.h"
 /**
@@ -216,61 +217,14 @@ void driveCharacterizationTest(PathFollower &follower)
 
 
 void autonomous() {
-	// pros::Task odom_task(odometry_thread); Threading for later ;) :O
-	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Test: %f", odom.position_x);
-	
- // Creates a motor group with forwards port 5 and reversed ports 4 & 6
-
 	PathFollower follower(odom, right_mg, left_mg);
+	Autos autos(follower);
+	AutoBuilder builder = autos.getAutoRightSide();
 
-	AutoBuilder builder = AutoBuilder();
-
-	path0.generatePath();
-	path0.name = "Path0";
-
-	path1.generatePath();
-	path1.name = "Path1";
-
-	path2.generatePath();
-	path3.generatePath();
-
-	builder.add_command(Command(setPathFollower(follower, path0)));
-	builder.add_command(Command(follow_path(follower, 10)));
-
-	builder.add_command(Command(setPathFollower(follower, path1)));
-	builder.add_command(Command(follow_path(follower, 10, true)));
-
-	builder.add_command(Command(rotate_to_degrees(follower, 90)));
-
-	builder.add_command(Command(setPathFollower(follower, path2)));
-	builder.add_command(Command(follow_path(follower, 10)));
-
-	builder.add_command(Command(setPathFollower(follower, path3)));
-	builder.add_command(Command(follow_path(follower, 15, true)));
-
-	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM,10,"len:%d",builder.auto_commands.size());
 	while (true)
 	{
-		// pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		//                  (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		//                  (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
-
-		// // Arcade control scheme
-		// odom.calculate_postition();
 		odom.calculate_postition();
-
-		
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM,8,"done: %d",builder.run_commands());
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM,9,"index: %d",builder.current_index);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Turn: %i", turn);
-
-		// int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
-		// int turn = master.get_analog(ANALOG_RIGHT_X);  // Gets the turn left/right from right joystick
-
-		// left_mg.move(dir + turn);                      // Sets left motor voltage
-		// right_mg.move(dir - turn);                     // Sets right motor voltage
-		// // left_mg.move_voltage(turn);
-		// right_mg.move_voltage(-turn);
+		builder.run_commands();
 
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);

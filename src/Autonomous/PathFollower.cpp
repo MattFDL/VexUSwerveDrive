@@ -25,7 +25,7 @@ public:
     double currentTime = 0;
     const double LOOKAHEAD_DISTANCE = 1.5; /// Might want to not use a constant and change this value in respect to current velocity
     //Anything lower than 1.5 seems to not work
-    const double TRACK_WIDTH = 10.0;
+    const double TRACK_WIDTH = 11.25;//10.0;
     PIDController lastPostionPID = PIDController(3.0, 0.5, 0);
     PIDController rotationPID = PIDController(20.0, 3.0, 0); // PIDController(4.0, 1.8, 0);
 
