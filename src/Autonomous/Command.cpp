@@ -40,9 +40,11 @@ class Command
     }
 
     bool run() {
+        // if there is nothing to run exit
         if (commands_to_run.size() == 0) {
             return true; 
         }
+        
         if (condition) {
             return true; 
         }

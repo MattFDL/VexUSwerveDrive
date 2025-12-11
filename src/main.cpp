@@ -36,9 +36,25 @@ void on_center_button()
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-pros::Rotation forwardRot(-4); // changed to port 14
-// pros::Rotation sidewaysRot(-14);
-pros::IMU imu(5); // TODO get the correct port number
+pros::Rotation forwardRot(-5); // changed to port 6
+// pros::Rotation sidewaysRot(-6);
+pros::IMU imu(6); // TODO get the correct port number
+
+
+
+pros::Controller master(pros::E_CONTROLLER_MASTER);
+pros::MotorGroup left_mg({4,-3,-2,-1});	  // Creates a motor group with forwards ports 1 & 3 and reversed port 2
+pros::MotorGroup right_mg({10, -7, 9,8});
+pros::MotorGroup intake_mg({-13,-12,-11});
+
+PneumaticCylinder lift('e');
+PneumaticCylinder holder('h');
+PneumaticCylinder rake('f');
+PneumaticCylinder dscore('g');
+
+
+driverControls driver(master,left_mg,right_mg,intake_mg,0,lift,rake,holder,dscore);
+
 
 odometry odom(forwardRot, imu);
 
@@ -78,7 +94,7 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -197,15 +213,13 @@ void driveCharacterizationTest(PathFollower &follower)
 	loopCount += 1;
 }
 
-void opcontrol()
-{
 
+
+void autonomous() {
 	// pros::Task odom_task(odometry_thread); Threading for later ;) :O
 	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Test: %f", odom.position_x);
-
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::MotorGroup left_mg({-10, -9, 2, -1});	  // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-	pros::MotorGroup right_mg({20, 19, -12, 11}); // Creates a motor group with forwards port 5 and reversed ports 4 & 6
+	
+ // Creates a motor group with forwards port 5 and reversed ports 4 & 6
 
 	PathFollower follower(odom, right_mg, left_mg);
 
@@ -234,10 +248,9 @@ void opcontrol()
 	builder.add_command(Command(setPathFollower(follower, path3)));
 	builder.add_command(Command(follow_path(follower, 15, true)));
 
-
+	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM,10,"len:%d",builder.auto_commands.size());
 	while (true)
 	{
-
 		// pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
 		//                  (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
 		//                  (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);  // Prints status of the emulated screen LCDs
@@ -246,16 +259,9 @@ void opcontrol()
 		// odom.calculate_postition();
 		odom.calculate_postition();
 
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
-		{
-			builder.run_commands();
-			
-		}
-		else
-		{
-			left_mg.move_voltage(0);
-			right_mg.move_voltage(0);
-		}
+		
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM,8,"done: %d",builder.run_commands());
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM,9,"index: %d",builder.current_index);
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Turn: %i", turn);
 
 		// int dir = master.get_analog(ANALOG_LEFT_Y);    // Gets amount forward/backward from left joystick
@@ -277,7 +283,16 @@ void opcontrol()
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Velocity: %f", odom.velocity);
 
 		pros::delay(10); // Run for 20 ms then update
-
 		// TODO: change everything (that you can) to references
 	}
+}
+
+
+
+void opcontrol()
+{
+	while(true){
+		driver.handleInputs();
+	}
+	
 }
