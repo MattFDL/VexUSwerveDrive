@@ -111,8 +111,6 @@ void competition_initialize() {}
  * task, not resume it from where it left off.
  */
 
-std::atomic<std::array<double, 3>> myAtomicStdArray;
-
 // void odometry_thread() {
 // 	while (true) {
 
@@ -120,77 +118,7 @@ std::atomic<std::array<double, 3>> myAtomicStdArray;
 // 	}
 
 // }; TODO Threading later :----D
-// Path path(Point2D(0, 0), Point2D(10, -10), Point2D(20, 10), Point2D(30, 0));
-// Path path(Point2D(0, 0), Point2D(40, 0), Point2D(40, 30), Point2D(0, 30));
-// Path path2(Point2D(0, 30), Point2D(40, 30), Point2D(40, 0), Point2D(0, 0));
 
-Path path0(Point2D(54.41873, 16.5433),Point2D(54.66749, 46.97948),Point2D(23.09941, 42.71954),Point2D(24.91983, 16.46387));
-Path path1(Point2D(24.91983, 16.46387),Point2D(25.08891, 28.65559));
-Path path2(Point2D(25.08891, 28.65559),Point2D(25.0889, 39.11803));
-Path path3(Point2D(25.0889, 39.11803),Point2D(42.61952, 6.623184),Point2D(37.10316, 112.6259),Point2D(76.78007, 85.47221));
-
-
-void test_function()
-{
-	// pros::screen::draw_circle(10, 10, 5);
-	// pros::screen::draw_circle(30, 100, 5);
-	// pros::screen::draw_circle(100, 200, 5);
-	// pros::screen::draw_circle(200, 10, 5);
-	for (Point2D num : path0.curvePoints)
-	{
-		int x = (int)num.x;
-		int y = (int)num.y;
-		pros::screen::draw_pixel(x, y);
-	}
-	// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Length: %f", path.curve_length);
-}
-
-std::function<bool()> waitCommand(double delay_secs)
-{
-	const uint32_t start_time = pros::millis();
-	auto lambda_wait = [delay_secs, start_time]()
-	{
-		double current_time_from_start = (pros::millis() - start_time) / 1000.0;
-		if (current_time_from_start >= delay_secs)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	};
-	return lambda_wait;
-}
-
-std::function<bool()> setPathFollower(PathFollower &f, Path &p)
-{
-	auto path_set = [&f, &p]()
-	{
-		f.setPath(p);
-		return true;
-	};
-	return path_set;
-}
-std::function<bool()> follow_path(PathFollower &f, double vel, bool backwards = false)
-{
-
-	auto path_follower = [&f, backwards, vel]()
-	{
-		bool b = f.followPath(backwards, vel);
-		return b;
-	};
-	return path_follower;
-}
-std::function<bool()> rotate_to_degrees(PathFollower &f, double deg)
-{
-	auto rotaton_follower = [&f, deg]()
-	{
-		bool b = f.rotateToDegrees(deg);
-		return b;
-	};
-	return rotaton_follower;
-}
 void driveCharacterizationTest(PathFollower &follower)
 {
 	static int loopCount = 1;
