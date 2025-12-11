@@ -146,7 +146,7 @@ void driveCharacterizationTest(PathFollower &follower)
 
 void autonomous() {
 	PathFollower follower(odom, right_mg, left_mg);
-	Autos autos(follower);
+	Autos autos(follower, intake_mg);
 	AutoBuilder builder = autos.getAutoRightSide();
 
 	while (true)
@@ -173,7 +173,14 @@ void autonomous() {
 
 void opcontrol()
 {
+	// PathFollower follower(odom, right_mg, left_mg);
+	// Autos autos(follower, intake_mg);
+	// AutoBuilder builder = autos.getTestAuto();
 	while(true){
+		// bool right_a=master.get_digital(pros::E_CONTROLLER_DIGITAL_A);
+		// if (right_a) {
+		// 	builder.run_commands();
+		// }
 		driver.handleInputs();
 	}
 	

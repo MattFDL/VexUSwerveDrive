@@ -12,16 +12,17 @@
 class Autos
 {
 public:
-    PathFollower follower;
-    Autos(PathFollower &f) : follower(f)
+    PathFollower &follower;
+    pros::MotorGroup &intake;
+    Autos(PathFollower &f, pros::MotorGroup &intake_mg) : follower(f), intake(intake_mg)
     {
     }
 
-    std::function<bool()> waitCommand(double delay_secs, double test)
+    std::function<bool()> waitCommand(double delay_secs)
     {
         auto start_time_ptr = std::make_shared<std::optional<uint32_t>>();
 
-        return [start_time_ptr, delay_secs, test]() -> bool
+        return [start_time_ptr, delay_secs]() -> bool
         {
             if (!start_time_ptr->has_value())
             {
@@ -34,7 +35,6 @@ public:
 
             if (current_time_from_start >= delay_secs)
             {
-                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Done: %f", test);
                 return true;
             }
             return false;
@@ -71,6 +71,15 @@ public:
         };
         return rotaton_follower;
     }
+    std::function<bool()> start_intake(int32_t intake_vel, pros::MotorGroup &m_intake) {
+        auto intake_func = [intake_vel, &m_intake]()
+        { 
+            m_intake.move(intake_vel);
+            return true;
+        };
+        return intake_func;
+    }
+
 
     AutoBuilder getAutoRightSide()
     {
@@ -104,8 +113,9 @@ public:
     AutoBuilder getTestAuto()
     {
         AutoBuilder builder = AutoBuilder();
-        builder.add_command(Command(waitCommand(10, 1)));
-        builder.add_command(Command(waitCommand(5, 2)));
+        builder.add_command(Command(waitCommand(5)));
+        builder.add_command(Command(start_intake(127, intake), waitCommand(5), CommandType::Parallel));
+        builder.add_command(Command(start_intake(0, intake)));
 
         return builder;
     }
