@@ -47,9 +47,9 @@ pros::MotorGroup right_mg({10, -7, 9, 8});
 pros::MotorGroup intake_mg({-13, -12, -11});
 
 PneumaticCylinder lift('e');
-PneumaticCylinder holder('h');
+PneumaticCylinder holder('g');
 PneumaticCylinder rake('f');
-PneumaticCylinder dscore('g');
+PneumaticCylinder dscore('h');
 
 driverControls driver(master, left_mg, right_mg, intake_mg, 0, lift, rake, holder, dscore);
 
@@ -62,7 +62,7 @@ void initialize()
 {
 	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Innit: %f", 1);
 	odom.reset_sensors();
-	odom.set_start_position(57.14732, 15.58576, 90); // 25.36158, 12.67665, 270); //56.27433, 12.68827
+	odom.set_start_position(71.97111, 25.95749, 90); // 25.36158, 12.67665, 270); //56.27433, 12.68827
 }
 
 /**
@@ -144,7 +144,7 @@ void autonomous()
 {
 
 	autos.generateAutoRightSide();
-	AutoBuilder builder = autos.getAutoRightSide(follower);
+	AutoBuilder builder = autos.getAutoRightSide(follower,intake_mg,rake,dscore,holder,lift);
 
 	while (true)
 	{
@@ -183,5 +183,7 @@ void opcontrol()
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
+
+		pros::delay(10);
 	}
 }

@@ -19,9 +19,9 @@ void driverControls::handleInputs(){
 }
 void driverControls::pneumatics(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)){rake.toggle();}
-    if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){holderFlap.toggle();}
+    if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){Dscore.toggle();}
     if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){lifter.toggle();}
-    if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){Dscore.toggle();}
+    if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){holderFlap.toggle();}
 }
 int32_t driverControls::deadzoneCalc(int32_t input, int16_t deadzone) {
     if (input >= -deadzone && input <= deadzone) {
