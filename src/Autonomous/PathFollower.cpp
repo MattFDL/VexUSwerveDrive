@@ -175,7 +175,7 @@ public:
         // There are technically two ways of doing this:
         // Curvature or using a PID Controller + Error
 
-        double curvature = 2 * std::sin(heading_error) / adjusted_look_distance;
+        double curvature = (2 * std::sin(heading_error)) / adjusted_look_distance;
         // rate in change in direction of a curve at a specific point
         double angular_vel = vel * curvature;
         // if (backwards) {

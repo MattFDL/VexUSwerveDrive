@@ -1,4 +1,4 @@
-#ifndef PIDCONTROLLER //I think this needs to be added to be used in multiple files
+#ifndef PIDCONTROLLER
 #define PIDCONTROLLER
 
 #include <cmath>
@@ -17,7 +17,7 @@ public:
 
     double error_tolerance = 0.05;
 
-    double m_period = 0.02;
+    double m_period = 0.01;
     // TODO: might need double error_derivative; ...
 
     double m_setpoint;
@@ -40,6 +40,7 @@ public:
 
     PIDController(double P_val, double I_val, double D_val, double I_zone_val, double max_I_val, double min_I_val)
     {
+        // alternative PID controller set up for I zone and max/min integral
         kP = P_val;
         kI = I_val;
         kD = D_val;
@@ -69,6 +70,7 @@ public:
     }
 
     bool atTolerance() {
+        // get the tolerance of the PID
         return (std::abs(m_error) < error_tolerance);
     }
 
@@ -78,7 +80,7 @@ public:
         m_period = period;
     }
 
-    // continuous input: useful for rotation controller (when the values can wrap around)
+    // continuous input: useful for rotation controllers (when the values can wrap around)
     void enableContinuousInput(double minimumInput, double maximumInput)
     {
         m_continuous = true;
@@ -95,11 +97,9 @@ public:
     {
         m_setpoint = setpoint;
 
-        // NEED TO DO ENABLE CONTINUOUS
-
-        // m_haveSetpoint = true;
     }
 
+    // calculate and set the setpoint in one function
     double calculate(double measurement, double setpoint)
     {
         setSetpoint(setpoint);
@@ -107,11 +107,11 @@ public:
         return calculate(measurement);
     }
 
+    // calculate the needed feedback
     double calculate(double measurement)
     {
         m_measurement = measurement;
         m_prevError = m_error;
-        // m_haveMeasurement = true;
 
         if (m_continuous)
         {
