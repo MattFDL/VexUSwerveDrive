@@ -17,10 +17,11 @@ private:
     pros::MotorGroup &right_mg;
     pros::MotorGroup &left_mg;
     Path path = Path();
-    odometry &odom;
+    
 
 public:
     //VelocityContraints constraints = VelocityContraints(5.0, 15.0);
+    odometry &odom;
     int currentIndex = 0;
     double currentTime = 0;
     const double LOOKAHEAD_DISTANCE = 1.5; /// Might want to not use a constant and change this value in respect to current velocity
@@ -161,6 +162,12 @@ public:
                 ctrl += 1;
                 return true; 
             }
+
+            
+            pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Heading: %f", look_ahead_point.x);
+            pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Heading: %f", look_ahead_point.y);
+
+
             return false; 
         }
 

@@ -11,11 +11,18 @@
 
 class Autos
 {
+    Path rightSidePath0;
+    Path rightSidePath1;
+    Path rightSidePath2;
+    Path rightSidePath3;
+
 public:
-    PathFollower &follower;
-    pros::MotorGroup &intake;
-    Autos(PathFollower &f, pros::MotorGroup &intake_mg) : follower(f), intake(intake_mg)
+    Autos()
     {
+        rightSidePath0 = Path(Point2D(54.41873, 16.5433), Point2D(54.66749, 46.97948), Point2D(23.09941, 42.71954), Point2D(24.91983, 16.46387));
+        rightSidePath1 = Path(Point2D(24.91983, 16.46387), Point2D(25.08891, 28.65559));
+        rightSidePath2 = Path(Point2D(25.08891, 28.65559), Point2D(25.0889, 39.11803));
+        rightSidePath3 = Path(Point2D(25.0889, 39.11803), Point2D(42.61952, 6.623184), Point2D(37.10316, 112.6259), Point2D(76.78007, 85.47221));
     }
 
     std::function<bool()> waitCommand(double delay_secs)
@@ -71,28 +78,37 @@ public:
         };
         return rotaton_follower;
     }
-    std::function<bool()> start_intake(int32_t intake_vel, pros::MotorGroup &m_intake) {
+    std::function<bool()> start_intake(int32_t intake_vel, pros::MotorGroup &m_intake)
+    {
         auto intake_func = [intake_vel, &m_intake]()
-        { 
+        {
             m_intake.move(intake_vel);
             return true;
         };
         return intake_func;
     }
 
-
-    AutoBuilder getAutoRightSide()
+    std::function<bool()> set_start_position(const Path p, PathFollower &f, const double deg)
     {
-        AutoBuilder builder = AutoBuilder();
-        Path rightSidePath0(Point2D(54.41873, 16.5433), Point2D(54.66749, 46.97948), Point2D(23.09941, 42.71954), Point2D(24.91983, 16.46387));
-        Path rightSidePath1(Point2D(24.91983, 16.46387), Point2D(25.08891, 28.65559));
-        Path rightSidePath2(Point2D(25.08891, 28.65559), Point2D(25.0889, 39.11803));
-        Path rightSidePath3(Point2D(25.0889, 39.11803), Point2D(42.61952, 6.623184), Point2D(37.10316, 112.6259), Point2D(76.78007, 85.47221));
+        auto set_start_func = [p, &f, deg]()
+        {
+            f.odom.set_start_position(p.start_position.x, p.start_position.y, deg);
+            return true;
+        };
+        return set_start_func;
+    }
 
+    void generateAutoRightSide()
+    {
         rightSidePath0.generatePath();
         rightSidePath1.generatePath();
         rightSidePath2.generatePath();
         rightSidePath3.generatePath();
+    }
+    AutoBuilder getAutoRightSide(PathFollower &follower)
+    {
+
+        AutoBuilder builder = AutoBuilder();
 
         builder.add_command(Command(setPathFollower(follower, rightSidePath0)));
         builder.add_command(Command(follow_path(follower, 10)));
@@ -107,15 +123,14 @@ public:
 
         builder.add_command(Command(setPathFollower(follower, rightSidePath3)));
         builder.add_command(Command(follow_path(follower, 15, true)));
-
         return builder;
     }
     AutoBuilder getTestAuto()
     {
         AutoBuilder builder = AutoBuilder();
-        builder.add_command(Command(waitCommand(5)));
-        builder.add_command(Command(start_intake(127, intake), waitCommand(5), CommandType::Parallel));
-        builder.add_command(Command(start_intake(0, intake)));
+        // builder.add_command(Command(waitCommand(5)));
+        // builder.add_command(Command(start_intake(127, intake), waitCommand(5), CommandType::Parallel));
+        // builder.add_command(Command(start_intake(0, intake)));
 
         return builder;
     }

@@ -37,27 +37,26 @@ void on_center_button()
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-pros::Rotation forwardRot(-5); // changed to port 6
+pros::Rotation forwardRot(5); // changed to port 6
 // pros::Rotation sidewaysRot(-6);
 pros::IMU imu(6); // TODO get the correct port number
 
-
-
 pros::Controller master(pros::E_CONTROLLER_MASTER);
-pros::MotorGroup left_mg({4,-3,-2,-1});	  // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-pros::MotorGroup right_mg({10, -7, 9,8});
-pros::MotorGroup intake_mg({-13,-12,-11});
+pros::MotorGroup left_mg({4, -3, -2, -1}); // Creates a motor group with forwards ports 1 & 3 and reversed port 2
+pros::MotorGroup right_mg({10, -7, 9, 8});
+pros::MotorGroup intake_mg({-13, -12, -11});
 
 PneumaticCylinder lift('e');
 PneumaticCylinder holder('h');
 PneumaticCylinder rake('f');
 PneumaticCylinder dscore('g');
 
-
-driverControls driver(master,left_mg,right_mg,intake_mg,0,lift,rake,holder,dscore);
-
+driverControls driver(master, left_mg, right_mg, intake_mg, 0, lift, rake, holder, dscore);
 
 odometry odom(forwardRot, imu);
+
+Autos autos = Autos();
+PathFollower follower(odom, right_mg, left_mg);
 
 void initialize()
 {
@@ -95,7 +94,6 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -142,12 +140,11 @@ void driveCharacterizationTest(PathFollower &follower)
 	loopCount += 1;
 }
 
+void autonomous()
+{
 
-
-void autonomous() {
-	PathFollower follower(odom, right_mg, left_mg);
-	Autos autos(follower, intake_mg);
-	AutoBuilder builder = autos.getAutoRightSide();
+	autos.generateAutoRightSide();
+	AutoBuilder builder = autos.getAutoRightSide(follower);
 
 	while (true)
 	{
@@ -157,31 +154,34 @@ void autonomous() {
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Angular Velocty: %f", odom.angular_velocity);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Angular: %f", follower.test1_ang);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Vel Left: %f", follower.testx_vel);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Vel Right: %f", follower.testy_vel);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "Heading Error: %f", (follower.heading_error_test / M_PI) * 180);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Angular Velocty: %f", odom.angular_velocity);
+		//  pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Angular: %f", follower.test1_ang);
+		//  pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Vel Left: %f", follower.testx_vel);
+		//  pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Vel Right: %f", follower.testy_vel);
+		//  pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "Heading Error: %f", (follower.heading_error_test / M_PI) * 180);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Velocity: %f", odom.velocity);
 
 		pros::delay(10); // Run for 20 ms then update
-		// TODO: change everything (that you can) to references
+						 // // TODO: change everything (that you can) to references
 	}
 }
-
-
 
 void opcontrol()
 {
 	// PathFollower follower(odom, right_mg, left_mg);
 	// Autos autos(follower, intake_mg);
 	// AutoBuilder builder = autos.getTestAuto();
-	while(true){
+	while (true)
+	{
 		// bool right_a=master.get_digital(pros::E_CONTROLLER_DIGITAL_A);
 		// if (right_a) {
 		// 	builder.run_commands();
 		// }
 		driver.handleInputs();
+		odom.calculate_postition();
+
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
 	}
-	
 }

@@ -87,7 +87,7 @@ public:
         position_x = start_x;
         position_y = start_y;
         position_rotation_sensor = start_theta;
-        imu.set_heading(start_theta); 
+        imu.set_heading(180 - start_theta); 
     }
 
     void calculate_postition() {
