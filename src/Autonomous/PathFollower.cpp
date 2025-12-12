@@ -50,7 +50,7 @@ public:
         rotationPID.enableContinuousInput(-M_PI, M_PI);
         rotationPID.setIzone(0.4);
         rotationPID.setMaxMinI(10, -10);
-        rotationPID.setErrorTolerance(0.1);
+        rotationPID.setErrorTolerance(0.2);
     }
 
     void driveMotor(double left_volts, double right_volts)
