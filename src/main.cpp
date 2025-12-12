@@ -145,9 +145,10 @@ void driveCharacterizationTest(PathFollower &follower)
 void autonomous()
 {
 
-	//autos.generateAutoRightSide();
-	autos.generateAutoLeftSide();
-	AutoBuilder builder = autos.getAutoLeftSide(follower,intake_mg,rake,dscore,holder,lift);
+	autos.generateAutoRightSide();
+	//autos.generateAutoLeftSide();
+//	AutoBuilder builder = autos.getAutoLeftSide(follower,intake_mg,rake,dscore,holder,lift);
+	AutoBuilder builder = autos.getAutoRightSide(follower,intake_mg,rake,dscore,holder,lift);
 
 	while (true)
 	{
