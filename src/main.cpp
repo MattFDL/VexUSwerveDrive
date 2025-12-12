@@ -62,7 +62,9 @@ void initialize()
 {
 	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Innit: %f", 1);
 	odom.reset_sensors();
-	odom.set_start_position(71.97111, 25.95749, 90); // 25.36158, 12.67665, 270); //56.27433, 12.68827
+	//odom.set_start_position(71.97111, 25.95749, 90); // 25.36158, 12.67665, 270); //56.27433, 12.68827
+	odom.set_start_position(0, 0, 90); // 25.36158, 12.67665, 270); //56.27433, 12.68827
+
 }
 
 /**
@@ -143,8 +145,9 @@ void driveCharacterizationTest(PathFollower &follower)
 void autonomous()
 {
 
-	autos.generateAutoRightSide();
-	AutoBuilder builder = autos.getAutoRightSide(follower,intake_mg,rake,dscore,holder,lift);
+	//autos.generateAutoRightSide();
+	autos.generateAutoLeftSide();
+	AutoBuilder builder = autos.getAutoLeftSide(follower,intake_mg,rake,dscore,holder,lift);
 
 	while (true)
 	{
@@ -183,6 +186,10 @@ void opcontrol()
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Velocity: %f", odom.velocity);
+		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Ticks: %f", odom.ticks);
+
+
 
 		pros::delay(10);
 	}

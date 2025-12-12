@@ -20,22 +20,29 @@ class Autos
     Path rightSidePath4;
     Path rightSidePath5;
 
+    Path leftSidePath0;
+    Path leftSidePath1;
+    Path leftSidePath2;
+    Path leftSidePath3;
+    Path leftSidePath4;
+    Path leftSidePath5;
+
 public:
     Autos()
     {
-        //rightSidePath0 = Path(Point2D(54.41873, 16.5433), Point2D(54.66749, 46.97948), Point2D(23.09941, 42.71954), Point2D(24.91983, 16.46387));
-        //rightSidePath1 = Path(Point2D(24.91983, 16.46387), Point2D(25.08891, 28.65559));
-        //rightSidePath2 = Path(Point2D(25.08891, 28.65559), Point2D(25.0889, 39.11803));
-        //rightSidePath3 = Path(Point2D(25.0889, 39.11803), Point2D(42.61952, 6.623184), Point2D(37.10316, 112.6259), Point2D(76.78007, 85.47221));
-
-
         rightSidePath0 =Path(Point2D(72, 25.95749),Point2D(81.5609, 46.98569),Point2D(121, 45.02151),Point2D(118.7646, 17.25));//,false,false);
-        //rightSidePath5 =Path(Point2D(118.7646, 18),Point2D(118.7646, 17.2));
         rightSidePath1 =Path(Point2D(118.7646, 17.25),Point2D(120.5349, 28.13017));//,true,false);
         rightSidePath2 =Path(Point2D(120.5349, 28.13017),Point2D(120, 41.5));//,false,false);
         rightSidePath3 =Path(Point2D(120, 41.5),Point2D(122.0089, 23.92595),Point2D(124.5628, 22.60023));//,true,false);
         rightSidePath4 =Path(Point2D(124.5628, 22.60023),Point2D(132, 25));//,false,false);
 
+
+        leftSidePath0 = Path(Point2D(56.24016, 21.23797),Point2D(55.05965, 39.89005),Point2D(27.5537, 40.36225),Point2D(25.54679, 17));
+        leftSidePath1 = Path(Point2D(25.54679, 17),Point2D(24.95657, 26.07805));
+        leftSidePath2 = Path(Point2D(24.95657, 26.07805),Point2D(24.95657, 40.00811));
+        leftSidePath3 = Path(Point2D(24.95657, 40.00811),Point2D(24.95657, 27.73077));
+        leftSidePath4 = Path(Point2D(24.95657, 27.73077),Point2D(25.42878, 17));
+        leftSidePath5 = Path(Point2D(25.42878, 17),Point2D(32.03964, 36.23047),Point2D(58.24704, 58.66021));
 
     }
 
@@ -156,10 +163,24 @@ public:
         rightSidePath3.generatePath();
         rightSidePath4.generatePath();
     }
+    void generateAutoLeftSide() 
+    {
+        leftSidePath0.generatePath();
+        leftSidePath1.generatePath();
+        leftSidePath2.generatePath();
+        leftSidePath3.generatePath();
+        leftSidePath4.generatePath();
+        leftSidePath5.generatePath();
+    }
     AutoBuilder getAutoRightSide(PathFollower &follower, pros::MotorGroup &intake,PneumaticCylinder &rake,PneumaticCylinder &matchLoad,PneumaticCylinder &flap, PneumaticCylinder &lifter)
     {
 
         AutoBuilder builder = AutoBuilder();
+
+        builder.add_command(Command([&follower, this]() {
+            follower.odom.set_start_position(rightSidePath0.start_position.x, rightSidePath0.start_position.y, 90);
+            return true;
+        }));
 
         builder.add_command(Command(pneumatics_Activeate(true,rake)));
         builder.add_command(Command(waitCommand(.5)));
@@ -224,6 +245,56 @@ public:
         // builder.add_command(Command(waitCommand(5)));
         // builder.add_command(Command(start_intake(127, intake), waitCommand(5), CommandType::Parallel));
         // builder.add_command(Command(start_intake(0, intake)));
+
+        return builder;
+    }
+    AutoBuilder getAutoLeftSide(PathFollower &follower, pros::MotorGroup &intake,PneumaticCylinder &rake,PneumaticCylinder &matchLoad,PneumaticCylinder &flap, PneumaticCylinder &lifter) {
+        AutoBuilder builder = AutoBuilder();
+
+        builder.add_command(Command([&follower, this]() {
+            follower.odom.set_start_position(leftSidePath0.start_position.x, leftSidePath0.start_position.y, 90);
+            return true;
+        }));
+
+
+
+        builder.add_command(Command(setPathFollower(follower, leftSidePath0)));
+
+        std::vector<std::function<bool()>> command_list1;
+        command_list1.push_back(follow_path(follower, 10));
+        command_list1.push_back(waitUntilPnuematics(3, matchLoad, true));
+
+        builder.add_command(Command(command_list1, CommandType::Parallel));
+
+        builder.add_command(Command(start_intake(127, intake)));
+        builder.add_command(Command(waitCommand(3)));
+        builder.add_command(Command(start_intake(0, intake)));
+
+        builder.add_command(Command(setPathFollower(follower, leftSidePath1)));
+        builder.add_command(Command(follow_path(follower, 10, true)));
+
+        builder.add_command(Command(pneumatics_Activeate(false,matchLoad)));
+        builder.add_command(Command(rotate_to_degrees(follower, 90)));
+        builder.add_command(Command(pneumatics_Activeate(true,lifter)));
+
+        builder.add_command(Command(setPathFollower(follower, leftSidePath2)));
+        builder.add_command(Command(follow_path(follower, 10)));
+
+        builder.add_command(Command(pneumatics_Activeate(true,flap)));
+        builder.add_command(Command(start_intake(127,intake)));
+        builder.add_command(Command(waitCommand(3)));
+        builder.add_command(Command(start_intake(0, intake)));
+
+        builder.add_command(Command(setPathFollower(follower, leftSidePath3)));
+        builder.add_command(Command(follow_path(follower, 10, true)));
+
+        builder.add_command(Command(rotate_to_degrees(follower, -90)));
+
+        builder.add_command(Command(setPathFollower(follower, leftSidePath4)));
+        builder.add_command(Command(follow_path(follower, 10)));
+
+        builder.add_command(Command(setPathFollower(follower, leftSidePath5)));
+        builder.add_command(Command(follow_path(follower, 10, true)));
 
         return builder;
     }

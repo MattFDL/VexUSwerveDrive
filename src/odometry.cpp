@@ -36,11 +36,15 @@ public:
     double gain = 0.7; 
 
     double rotation = 0;
+    double preRotation = 0;
+
     double angular_velocity = 0;
 
     // use IMU for secondary heading claulation
     bool use_imu = true;
     double rotation_addition_imu = 0;
+
+    double ticks = 0;
 
     /*
     USE THIS FOR THREADING:
@@ -70,7 +74,7 @@ public:
 
     //CONSTANTS FOR DISTANCE CALCULATIONS
     double const ROTATION_SENSOR_TICKS_TO_FULL_TURNS = 139293;//143580.0; //This value was determined experimentally (in 360 turns)
-    double const FORWARD_SENSOR_TICKS_TO_INCHES = 5243.0; //This value was determined experimentally (in inches)
+    double const FORWARD_SENSOR_TICKS_TO_INCHES = 5264.24;//5243.0; //This value was determined experimentally (in inches)
 
     // Constructor
     odometry(pros::Rotation &forward, pros::IMU &i) : forwardRotation(forward), imu(i) {}
@@ -92,6 +96,7 @@ public:
 
     void calculate_postition() {
         //double rotation_count_turns = (static_cast<double>(sidewaysRotation.get_position()) / ROTATION_SENSOR_TICKS_TO_FULL_TURNS); 
+        ticks = static_cast<double>(forwardRotation.get_position());
         double forward_count_inches = (static_cast<double>(forwardRotation.get_position()) / FORWARD_SENSOR_TICKS_TO_INCHES); 
         
         //double deltaDegrees = (rotation_count_turns - rotation_count_pre) * 360.0;
@@ -103,17 +108,19 @@ public:
 
         // update heading based on either imu or rotation sensor
         // calculate current heading in degrees
-        rotation = inputModulus(position_rotation_sensor, -180, 180);
+        //rotation = inputModulus(position_rotation_sensor, -180, 180);
 
-        double position_rotation_rad = inputModulus((position_rotation_sensor + position_rotation_sensor_pre) * 0.5, -180, 180) * (M_PI / 180.0);
+        //double position_rotation_rad = inputModulus((position_rotation_sensor + position_rotation_sensor_pre) * 0.5, -180, 180) * (M_PI / 180.0);
+
         //average rotation between time steps in radians for position calculations
 
-        if (use_imu)
-        {
+        
             // get imu reading then convert to radians
-            rotation = get_imu_reading();
-            position_rotation_rad = rotation * (M_PI / 180.0);
-        }
+        rotation = get_imu_reading();
+
+        //position_rotation_rad = rotation * (M_PI / 180.0);
+        double position_rotation_rad = inputModulus((rotation + preRotation) * 0.5, -180, 180) * (M_PI / 180.0);
+        
         
         uint32_t currentTime = pros::millis();
         double dt = (currentTime - previousTime) / 1000.0;
@@ -135,7 +142,8 @@ public:
         previousTime = currentTime;
         //rotation_count_pre = rotation_count_turns;
         forward_count_pre = forward_count_inches;
-        position_rotation_sensor_pre = position_rotation_sensor;
+        preRotation = rotation;
+        //position_rotation_sensor_pre = position_rotation_sensor;
     }
        
 

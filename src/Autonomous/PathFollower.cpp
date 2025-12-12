@@ -36,6 +36,7 @@ public:
 
     bool pathFinished = false;
     int ctrl = 0;
+    int stopTimeVel = 0;
     bool startPID = false;
     bool startDistancePID = false;
     int ctrlRot = 0;
@@ -79,6 +80,7 @@ public:
         currentIndex = 0;
         //currentTime = 0;
         ctrlRot = 0;
+        stopTimeVel = 0;
     }
     bool rotateToDegrees(double degrees) {
         double heading = odom.rotation;
@@ -96,20 +98,31 @@ public:
         return false; 
     }
 
-    bool followPath(bool backwards=false, double velocity = 8) //maybe pass velocity into here as well
+    bool followPath(bool backwards=false, double velocity = 8, double lookahead_dis = 0) //maybe pass velocity into here as well
     {   
-        double x = odom.position_x;//m_x; // odom.position_x;
-        double y = odom.position_y; // odom.position_y;
+        double x = odom.position_x;
+        double y = odom.position_y; 
         double heading = odom.rotation;
 
-        double heading_rad = (heading / 180) * M_PI;//(heading / 180) * M_PI; //(odom.position_rotation_sensor / 180) * M_PI;
-        // if (backwards) {
-        //     heading_rad = inputModulus((((heading + 180) / 180) * M_PI), -M_PI, M_PI); 
-        // }
-        double vel = velocity;                              // constraints.getCurrentVelocity(currentTime, path.curve_length);
+        double heading_rad = (heading / 180) * M_PI;
         
+        double vel = velocity; // constraints.getCurrentVelocity(currentTime, path.curve_length);
+        
+        if (std::abs(odom.velocity) < 0.05) {
+            stopTimeVel ++;
+            if (stopTimeVel > 50) {
+            return true;
+        }
+        } else {
+            stopTimeVel = 0;
+        }
+
         // or use the IMU both should be on the interval [-Pi, Pi]
-        double adjusted_look_distance = (vel / 4.0) * LOOKAHEAD_DISTANCE;
+        double adjusted_look_distance = lookahead_dis;
+        if (lookahead_dis == 0) {
+            adjusted_look_distance = (vel / 4.0) * LOOKAHEAD_DISTANCE;
+        }
+         
         if (backwards) {
             vel = vel * -1;
         }
