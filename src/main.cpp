@@ -9,8 +9,13 @@
 #include "Autonomous/Command.cpp"
 #include <functional>
 #include "Autonomous/Autos.cpp"
+#include <cmath>
+#include <utility>
 
 #include "drivers.h"
+#include "Swerve/SwerveModule.cpp"
+#include "Swerve/SwerveDrive.cpp"
+
 /**
  * A callback function for LLEMU's center button.
  *
@@ -57,6 +62,22 @@ odometry odom(forwardRot, imu);
 
 Autos autos = Autos();
 PathFollower follower(odom, right_mg, left_mg);
+
+pros::Motor fr_bottom_motor(9);
+pros::Motor fr_top_motor(10);
+pros::Rotation fr_encoder(-8);
+
+pros::Motor fl_bottom_motor(9);
+pros::Motor fl_top_motor(10);
+pros::Rotation fl_encoder(-8);
+
+pros::Motor br_bottom_motor(9);
+pros::Motor br_top_motor(10);
+pros::Rotation br_encoder(-8);
+
+pros::Motor bl_bottom_motor(9);
+pros::Motor bl_top_motor(10);
+pros::Rotation bl_encoder(-8);
 
 void initialize()
 {
@@ -175,20 +196,49 @@ void opcontrol()
 	// PathFollower follower(odom, right_mg, left_mg);
 	// Autos autos(follower, intake_mg);
 	// AutoBuilder builder = autos.getTestAuto();
+
+	SwerveModule mod_fr(fr_top_motor, fr_bottom_motor, fr_encoder, 5, -5, 0);
+	SwerveModule mod_fl(fl_top_motor, fl_bottom_motor, fl_encoder, 5, 5, 1);
+	SwerveModule mod_br(br_top_motor, br_bottom_motor, br_encoder, -5, -5, 2);
+	SwerveModule mod_bl(bl_top_motor, bl_bottom_motor, bl_encoder, -5, 5, 3);
+	SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl);
+
+
+	//SwerveDrive drive = SwerveDrive();
+	double angle = 0;
 	while (true)
 	{
 		// bool right_a=master.get_digital(pros::E_CONTROLLER_DIGITAL_A);
 		// if (right_a) {
 		// 	builder.run_commands();
 		// }
-		driver.handleInputs();
-		odom.calculate_postition();
+		// driver.handleInputs();
+		// odom.calculate_postition();
 
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Velocity: %f", odom.velocity);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Ticks: %f", odom.ticks);
+		double left_Y=master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+    	double left_X=master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
+		double right_x=master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+
+
+		// double temp = (180 * (std::atan2(left_Y, left_X) / M_PI)) - 90;
+		// double temp2 = right_y*50;
+		// if (temp < -90 || temp > -90) {
+		// 	angle = temp;
+		// }
+		
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Velocity Set: %f", temp2);
+
+		// std::pair<double,double> state(angle, temp2);
+
+		//mod1.set_state(state);
+		drive_train.drive_robot_orientated(left_Y, left_X, right_x);
+		
+
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Velocity: %f", odom.velocity);
+		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Ticks: %f", odom.ticks);
 
 
 
