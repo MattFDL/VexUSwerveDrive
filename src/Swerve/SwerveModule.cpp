@@ -15,13 +15,14 @@ class SwerveModule {
         pros::Motor &bottom_motor;
         pros::Rotation &moduleAngle;
     public:
-        PIDController turn_controller = PIDController(110.0, 0, 0);
+        PIDController turn_controller = PIDController(150.0, 0, 0);
         double pos_x; //positive forward
         double pos_y; //positive left
         double module_number;
+        bool reversed;
 
-        SwerveModule(pros::Motor &t_m, pros::Motor &b_m, pros::Rotation &m_a, double position_x, double position_y, double mod_num) : 
-        top_motor(t_m), bottom_motor(b_m), moduleAngle(m_a), pos_x(position_x), pos_y(position_y), module_number(mod_num)
+        SwerveModule(pros::Motor &t_m, pros::Motor &b_m, pros::Rotation &m_a, double position_x, double position_y, double mod_num, bool rev = false) : 
+        top_motor(t_m), bottom_motor(b_m), moduleAngle(m_a), pos_x(position_x), pos_y(position_y), module_number(mod_num), reversed(rev)
         {
             turn_controller.enableContinuousInput(-180, 180);
             turn_controller.setIzone(0.4);
@@ -50,6 +51,10 @@ class SwerveModule {
             double angle_setpoint = new_target_state.first;
             double vel = new_target_state.second;
 
+            if (reversed) {
+                vel = vel * -1;
+            }
+            
             vel = (vel * 100); 
             //inches per second to voltage estimation 
             //probably could do better later lol            
@@ -78,7 +83,7 @@ class SwerveModule {
             //angle optimization to choose the quickest path to get to the correct angle
 
             //lowest distance calculator
-            double angle_distance = std::abs(inputModulus(std::abs(target_state.first - current_angle), -180, 180));
+            double angle_distance = std::abs(inputModulus(target_state.first - current_angle, -180, 180));
             if (angle_distance < 90.0) {
                 return target_state;
             } else {

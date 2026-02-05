@@ -42,9 +42,9 @@ void on_center_button()
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-pros::Rotation forwardRot(5); // changed to port 6
-// pros::Rotation sidewaysRot(-6);
-pros::IMU imu(6); // TODO get the correct port number
+// pros::Rotation forwardRot(5); // changed to port 6
+// // pros::Rotation sidewaysRot(-6);
+pros::IMU imu(14); // TODO get the correct port number
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 pros::MotorGroup left_mg({4, -3, -2, -1}); // Creates a motor group with forwards ports 1 & 3 and reversed port 2
@@ -58,33 +58,33 @@ PneumaticCylinder dscore('h');
 
 driverControls driver(master, left_mg, right_mg, intake_mg, 0, lift, rake, holder, dscore);
 
-odometry odom(forwardRot, imu);
+// odometry odom(forwardRot, imu);
 
-Autos autos = Autos();
-PathFollower follower(odom, right_mg, left_mg);
+// Autos autos = Autos();
+// PathFollower follower(odom, right_mg, left_mg);
 
 pros::Motor fr_bottom_motor(9);
 pros::Motor fr_top_motor(10);
 pros::Rotation fr_encoder(-8);
 
-pros::Motor fl_bottom_motor(9);
-pros::Motor fl_top_motor(10);
-pros::Rotation fl_encoder(-8);
+pros::Motor fl_bottom_motor(2);
+pros::Motor fl_top_motor(1);
+pros::Rotation fl_encoder(-3);
 
-pros::Motor br_bottom_motor(9);
-pros::Motor br_top_motor(10);
-pros::Rotation br_encoder(-8);
+pros::Motor br_bottom_motor(20);
+pros::Motor br_top_motor(19);
+pros::Rotation br_encoder(-18);
 
-pros::Motor bl_bottom_motor(9);
-pros::Motor bl_top_motor(10);
-pros::Rotation bl_encoder(-8);
+pros::Motor bl_bottom_motor(12);
+pros::Motor bl_top_motor(11);
+pros::Rotation bl_encoder(-13);
 
 void initialize()
 {
 	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Innit: %f", 1);
-	odom.reset_sensors();
+	//odom.reset_sensors();
 	//odom.set_start_position(71.97111, 25.95749, 90); // 25.36158, 12.67665, 270); //56.27433, 12.68827
-	odom.set_start_position(0, 0, 90); // 25.36158, 12.67665, 270); //56.27433, 12.68827
+	//odom.set_start_position(0, 0, 90); // 25.36158, 12.67665, 270); //56.27433, 12.68827
 
 }
 
@@ -140,55 +140,32 @@ void competition_initialize() {}
 
 // }; TODO Threading later :----D
 
-void driveCharacterizationTest(PathFollower &follower)
-{
-	static int loopCount = 1;
-	static double totalVelCalculations = 0;
-	static double totalVoltsCalculations = 0;
-	static double step = 0.005;
-	static bool rejectKs = false;
-	follower.driveMotor(step * loopCount, step * loopCount);
-	if (odom.velocity > 0.1 && !(rejectKs))
-	{
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "KS: %f", step * loopCount);
-		rejectKs = true;
-	}
+// void driveCharacterizationTest(PathFollower &follower)
+// {
+// 	static int loopCount = 1;
+// 	static double totalVelCalculations = 0;
+// 	static double totalVoltsCalculations = 0;
+// 	static double step = 0.005;
+// 	static bool rejectKs = false;
+// 	follower.driveMotor(step * loopCount, step * loopCount);
+// 	if (odom.velocity > 0.1 && !(rejectKs))
+// 	{
+// 		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "KS: %f", step * loopCount);
+// 		rejectKs = true;
+// 	}
 
-	totalVelCalculations = totalVelCalculations + odom.velocity;
-	totalVoltsCalculations = totalVoltsCalculations + (step * loopCount);
+// 	totalVelCalculations = totalVelCalculations + odom.velocity;
+// 	totalVoltsCalculations = totalVoltsCalculations + (step * loopCount);
 
-	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "KV Calculation: %f", totalVoltsCalculations / totalVelCalculations);
-	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "KV Calculation Time Instant: %f", (step * loopCount) / odom.velocity);
-	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "Volts: %f", step * loopCount);
-	loopCount += 1;
-}
+// 	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "KV Calculation: %f", totalVoltsCalculations / totalVelCalculations);
+// 	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "KV Calculation Time Instant: %f", (step * loopCount) / odom.velocity);
+// 	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "Volts: %f", step * loopCount);
+// 	loopCount += 1;
+// }
 
 void autonomous()
 {
 
-	autos.generateAutoRightSide();
-	//autos.generateAutoLeftSide();
-//	AutoBuilder builder = autos.getAutoLeftSide(follower,intake_mg,rake,dscore,holder,lift);
-	AutoBuilder builder = autos.getAutoRightSide(follower,intake_mg,rake,dscore,holder,lift);
-
-	while (true)
-	{
-		odom.calculate_postition();
-		builder.run_commands();
-
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Heading: %f", odom.rotation);
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Angular Velocty: %f", odom.angular_velocity);
-		//  pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Angular: %f", follower.test1_ang);
-		//  pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Vel Left: %f", follower.testx_vel);
-		//  pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Vel Right: %f", follower.testy_vel);
-		//  pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "Heading Error: %f", (follower.heading_error_test / M_PI) * 180);
-		pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Velocity: %f", odom.velocity);
-
-		pros::delay(10); // Run for 20 ms then update
-						 // // TODO: change everything (that you can) to references
-	}
 }
 
 void opcontrol()
@@ -201,10 +178,8 @@ void opcontrol()
 	SwerveModule mod_fl(fl_top_motor, fl_bottom_motor, fl_encoder, 5, 5, 1);
 	SwerveModule mod_br(br_top_motor, br_bottom_motor, br_encoder, -5, -5, 2);
 	SwerveModule mod_bl(bl_top_motor, bl_bottom_motor, bl_encoder, -5, 5, 3);
-	SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl);
-
-
-	//SwerveDrive drive = SwerveDrive();
+	SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl, imu);
+	drive_train.reset_sensors();
 	double angle = 0;
 	while (true)
 	{
@@ -218,20 +193,19 @@ void opcontrol()
 		double left_Y=master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     	double left_X=master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 		double right_x=master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+		double right_y=master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 
 
+		// MODULE TEST CODE
 		// double temp = (180 * (std::atan2(left_Y, left_X) / M_PI)) - 90;
-		// double temp2 = right_y*50;
+		// double temp2 = right_y;
 		// if (temp < -90 || temp > -90) {
 		// 	angle = temp;
 		// }
-		
-		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Velocity Set: %f", temp2);
-
 		// std::pair<double,double> state(angle, temp2);
+		//mod_bl.set_state(state);
 
-		//mod1.set_state(state);
-		drive_train.drive_robot_orientated(left_Y, left_X, right_x);
+		drive_train.drive_field_orientated(left_Y, -left_X, right_x);
 		
 
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
