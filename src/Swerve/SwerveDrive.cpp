@@ -14,13 +14,13 @@ class SwerveDrive {
         /*
         ----DRIVE CONSTANTS---------------
         */
-        SwerveModule &front_right;
-        SwerveModule &front_left;
-        SwerveModule &back_right;
-        SwerveModule &back_left;
-        pros::IMU &imu;
+        SwerveModule front_right;
+        SwerveModule front_left;
+        SwerveModule back_right;
+        SwerveModule back_left;
+        pros::IMU imu;
 
-        std::vector<std::reference_wrapper<SwerveModule>> modules; 
+        std::vector<SwerveModule> modules; 
 
 
         SwerveDrive(SwerveModule &fr, SwerveModule &fl, SwerveModule &br, SwerveModule &bl, pros::IMU &i) : 
@@ -50,18 +50,17 @@ class SwerveDrive {
             //rotation 2.4 full turns per second
             //12.57 radians per second using 2 turns per second as an estimate
             double velocity_robot_rotation = rot * 0.0989763; //wheel_speed = w x r
-            for (const auto& mod : modules) {
-                double x_mod_pos = mod.get().pos_x;
-                double y_mod_pos = mod.get().pos_y;
+            for (auto mod : modules) { //maybe change to a reference
+                double x_mod_pos = mod.pos_x;
+                double y_mod_pos = mod.pos_y;
                 double vx_module = velocity_robot_x - (velocity_robot_rotation * y_mod_pos);
                 double vy_module = velocity_robot_y + (velocity_robot_rotation * x_mod_pos);
                 double angle = (180 * (std::atan2(vy_module, vx_module) / M_PI));
                 double speed = std::sqrt(std::pow(vx_module, 2) + std::pow(vy_module,2));
                 std::pair<double,double> state(angle, speed);
-                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.get().module_number * 2, "Angle: %f", angle);
-                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.get().module_number * 2 + 1, "Speed: %f", speed);
-
-                mod.get().set_state(state);
+                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2, "Angle: %f", angle);
+                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2 + 1, "Speed: %f", speed);
+                mod.set_state(state);
             }
             
         }
@@ -80,18 +79,19 @@ class SwerveDrive {
             //rotation 2.4 full turns per second
             //12.57 radians per second using 2 turns per second as an estimate
             double velocity_robot_rotation = rot * 0.0989763; //wheel_speed = w x r
-            for (const auto& mod : modules) {
-                double x_mod_pos = mod.get().pos_x;
-                double y_mod_pos = mod.get().pos_y;
+            for (auto mod : modules) {
+                
+                double x_mod_pos = mod.pos_x;
+                double y_mod_pos = mod.pos_y;
                 double vx_module = velocity_robot_x - (velocity_robot_rotation * y_mod_pos);
                 double vy_module = velocity_robot_y + (velocity_robot_rotation * x_mod_pos);
                 double angle = std::atan2(vy_module, vx_module) * (180/ M_PI);
                 double speed = std::sqrt(std::pow(vx_module, 2) + std::pow(vy_module,2));
                 std::pair<double,double> state(angle, speed);
-                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.get().module_number * 2, "Angle: %f", angle);
-                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.get().module_number * 2 + 1, "Speed: %f", speed);
+                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2, "Angle: %f", angle);
+                pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2 + 1, "Speed: %f", speed);
 
-                mod.get().set_state(state);
+                mod.set_state(state);
             }
             
         }

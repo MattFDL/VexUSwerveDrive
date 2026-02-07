@@ -47,16 +47,13 @@ void on_center_button()
 pros::IMU imu(14); // TODO get the correct port number
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
-pros::MotorGroup left_mg({4, -3, -2, -1}); // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-pros::MotorGroup right_mg({10, -7, 9, 8});
-pros::MotorGroup intake_mg({-13, -12, -11});
 
-PneumaticCylinder lift('e');
-PneumaticCylinder holder('g');
-PneumaticCylinder rake('f');
-PneumaticCylinder dscore('h');
+// PneumaticCylinder lift('e');
+// PneumaticCylinder holder('g');
+// PneumaticCylinder rake('f');
+// PneumaticCylinder dscore('h');
 
-driverControls driver(master, left_mg, right_mg, intake_mg, 0, lift, rake, holder, dscore);
+// driverControls driver(master, left_mg, right_mg, intake_mg, 0, lift, rake, holder, dscore);
 
 // odometry odom(forwardRot, imu);
 
@@ -216,6 +213,6 @@ void opcontrol()
 
 
 
-		pros::delay(10);
+		pros::delay(20);
 	}
 }
