@@ -72,7 +72,6 @@ void SwerveDrive::drive_field_orientated(double left_y_val, double left_x_val, d
     double velocity_robot_rotation = rot * 0.0989763; // wheel_speed = w x r
     for (auto mod : modules)
     {
-
         double x_mod_pos = mod.pos_x;
         double y_mod_pos = mod.pos_y;
         double vx_module = velocity_robot_x - (velocity_robot_rotation * y_mod_pos);
