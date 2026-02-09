@@ -1,13 +1,11 @@
 #ifndef SWERVEDRIVE
 #define SWERVEDRIVE
-#include "pros/motors.hpp"
+
 #include "pros/rotation.hpp"
 #include "SwerveModule.h"
 #include "pros/imu.hpp"
-#include "pros/screen.hpp"
 #include <utility>
 #include <vector>
-#include <functional>
 #include <cmath>
 
 class SwerveDrive {

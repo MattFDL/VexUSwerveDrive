@@ -48,14 +48,6 @@ void SwerveModule::set_state(std::pair<double, double> target_state)
     bottom_motor_speed = clamp(bottom_motor_speed, -12000, 12000);
     // TODO: need to normalize these speeds***********************
 
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Angle: %f", current_rotation_degs);
-
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 3, "Top Vel: %f", top_motor_speed);
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 4, "Bottom Vel: %f", bottom_motor_speed);
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Setpoint: %f", angle_setpoint);
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "Velocity: %f", vel);
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "rotation_gain: %f", rotation_gain);
-
     top_motor.move_voltage(top_motor_speed);
     bottom_motor.move_voltage(bottom_motor_speed);
 };

@@ -16,6 +16,7 @@ SwerveDrive::SwerveDrive(SwerveModule &fr, SwerveModule &fl, SwerveModule &br, S
     modules.push_back(front_left);
     modules.push_back(back_right);
     modules.push_back(back_left);
+    //modules = {front_right, front_left, back_right, back_left};
 }
 
 void SwerveDrive::reset_sensors()
@@ -79,8 +80,8 @@ void SwerveDrive::drive_field_orientated(double left_y_val, double left_x_val, d
         double angle = std::atan2(vy_module, vx_module) * (180 / M_PI);
         double speed = std::sqrt(std::pow(vx_module, 2) + std::pow(vy_module, 2));
         std::pair<double, double> state(angle, speed);
-        pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2, "Angle: %f", angle);
-        pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2 + 1, "Speed: %f", speed);
+        // pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2, "Angle: %f", angle);
+        // pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2 + 1, "Speed: %f", speed);
 
         mod.set_state(state);
     }
