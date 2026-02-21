@@ -35,7 +35,7 @@ void on_center_button()
  */
 // pros::Rotation forwardRot(5); // changed to port 6
 // // pros::Rotation sidewaysRot(-6);
-pros::IMU imu(15); // TODO get the correct port number
+pros::IMU imu(14); // TODO get the correct port number
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -51,21 +51,21 @@ pros::Controller master(pros::E_CONTROLLER_MASTER);
 // Autos autos = Autos();
 // PathFollower follower(odom, right_mg, left_mg);
 
-pros::Motor fr_bottom_motor(9);
-pros::Motor fr_top_motor(10);
-pros::Rotation fr_encoder(-8);
+pros::Motor fr_bottom_motor(2);
+pros::Motor fr_top_motor(3);
+pros::Rotation fr_encoder(-1);
 
-pros::Motor fl_bottom_motor(2);
-pros::Motor fl_top_motor(1);
-pros::Rotation fl_encoder(-3);
+pros::Motor fl_bottom_motor(12);
+pros::Motor fl_top_motor(13);
+pros::Rotation fl_encoder(-11);
 
-pros::Motor br_bottom_motor(20);
-pros::Motor br_top_motor(19);
-pros::Rotation br_encoder(-18);
+pros::Motor br_bottom_motor(9);
+pros::Motor br_top_motor(8);
+pros::Rotation br_encoder(-10);
 
-pros::Motor bl_bottom_motor(12);
-pros::Motor bl_top_motor(11);
-pros::Rotation bl_encoder(-13);
+pros::Motor bl_bottom_motor(19);
+pros::Motor bl_top_motor(18);
+pros::Rotation bl_encoder(-20);
 
 void initialize()
 {
@@ -84,9 +84,9 @@ void opcontrol()
 {
 
 	SwerveModule mod_fr(fr_top_motor, fr_bottom_motor, fr_encoder, 5, -5, 0);
-	SwerveModule mod_fl(fl_top_motor, fl_bottom_motor, fl_encoder, 5, 5, 1);
+	SwerveModule mod_fl(fl_top_motor, fl_bottom_motor, fl_encoder, 5, 5, 1, true);
 	SwerveModule mod_br(br_top_motor, br_bottom_motor, br_encoder, -5, -5, 2);
-	SwerveModule mod_bl(bl_top_motor, bl_bottom_motor, bl_encoder, -5, 5, 3);
+	SwerveModule mod_bl(bl_top_motor, bl_bottom_motor, bl_encoder, -5, 5, 3, true);
 	SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl, imu);
 	drive_train.reset_sensors();
 	double angle = 0;
