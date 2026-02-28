@@ -6,6 +6,7 @@
 
 #include "SwerveModule.h"
 #include "SwerveDrive.h"
+#include "Odometry.h"
 
 /**
  * A callback function for LLEMU's center button.
@@ -63,13 +64,20 @@ pros::Motor br_bottom_motor(9);
 pros::Motor br_top_motor(8);
 pros::Rotation br_encoder(-10);
 
-pros::Motor bl_bottom_motor(19);
-pros::Motor bl_top_motor(18);
+pros::Motor bl_bottom_motor(18);
+pros::Motor bl_top_motor(19);
 pros::Rotation bl_encoder(-20);
+
+
+pros::Rotation horizonal(-15);
+pros::Rotation vertical(4);
+
+Odometry odom(horizonal, vertical, imu);
 
 void initialize()
 {
 	pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Innit: %f", 1);
+	odom.reset_sensors();
 }
 
 void disabled() {}
@@ -81,17 +89,20 @@ void autonomous()
 {}
 
 void opcontrol()
-{
+{	
+	
 
 	SwerveModule mod_fr(fr_top_motor, fr_bottom_motor, fr_encoder, 5, -5, 0);
 	SwerveModule mod_fl(fl_top_motor, fl_bottom_motor, fl_encoder, 5, 5, 1, true);
 	SwerveModule mod_br(br_top_motor, br_bottom_motor, br_encoder, -5, -5, 2);
 	SwerveModule mod_bl(bl_top_motor, bl_bottom_motor, bl_encoder, -5, 5, 3, true);
-	SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl, imu);
-	drive_train.reset_sensors();
+	// SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl, imu);
+	SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl, odom);
+	// drive_train.reset_sensors();
 	double angle = 0;
 	while (true)
 	{
+		odom.calculate_position();
 		double left_Y=master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     	double left_X=master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 		double right_x=master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
@@ -107,7 +118,12 @@ void opcontrol()
 		// std::pair<double,double> state(angle, temp2);
 		//mod_bl.set_state(state);
 
-		drive_train.drive_field_orientated(left_Y, -left_X, right_x);
+		
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+			drive_train.drive_to_point_and_rotation(20, 20, -90);
+		} else {
+			drive_train.drive_field_orientated(left_Y, -left_X, right_x);
+		}
 		
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);

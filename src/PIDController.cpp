@@ -1,6 +1,4 @@
 #include "PIDController.h"
-#include <cmath>
-#include "CommonUtility.h"
 
 PIDController::PIDController(double P_val, double I_val, double D_val)
 {
@@ -94,7 +92,23 @@ double PIDController::calculate(double measurement)
         m_error = m_setpoint - m_measurement;
     }
 
+    //Period of Time Calculation
+    /*
+    may need this:
+    if (previousTime == 0) {
+        previousTime = pros::millis();
+    }
+    
+    */
+
+    uint32_t currentTime = pros::millis();
+    m_period = (currentTime - previousTime) / 1000.0;
+        if (m_period <= 0) {
+            m_period=0.001;
+        }
     m_errorDerivative = (m_error - m_prevError) / m_period;
+    previousTime = currentTime;
+    
 
     // If the absolute value of the position error is greater than I_zone, reset the total error
     if (std::abs(m_error) > I_zone)

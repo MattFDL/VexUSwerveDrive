@@ -1,6 +1,10 @@
 #ifndef PIDCONTROLLER
 #define PIDCONTROLLER
 
+#include "pros/rtos.hpp"
+#include <cmath>
+#include "CommonUtility.h"
+
 class PIDController
 {
 public:
@@ -15,6 +19,8 @@ public:
     double error_tolerance = 0.05;
 
     double m_period = 0.01;
+    uint32_t previousTime = pros::millis(); //this could break something
+
     // TODO: might need double error_derivative; ...
 
     double m_setpoint;

@@ -10,28 +10,34 @@
 #include <functional>
 #include <cmath>
 
-SwerveDrive::SwerveDrive(SwerveModule &fr, SwerveModule &fl, SwerveModule &br, SwerveModule &bl, pros::IMU &i) : front_right(fr), front_left(fl), back_right(br), back_left(bl), imu(i)
+SwerveDrive::SwerveDrive(SwerveModule &fr, SwerveModule &fl, SwerveModule &br, SwerveModule &bl, Odometry &o) : front_right(fr), front_left(fl), back_right(br), back_left(bl), odom(o)
 {
     modules.push_back(front_right);
     modules.push_back(front_left);
     modules.push_back(back_right);
     modules.push_back(back_left);
+    pid_theta.enableContinuousInput(-180, 180);
+    pid_theta.setErrorTolerance(5);
+    pid_x.setIzone(5);
+    pid_x.setMaxMinI(20, -20);
+    pid_y.setIzone(5);
+    pid_y.setMaxMinI(20, -20);
     //modules = {front_right, front_left, back_right, back_left};
 }
 
-void SwerveDrive::reset_sensors()
-{
-    imu.reset(true); // blocking
-}
-double SwerveDrive::get_imu_reading()
-{
-    double reading_adjusted = (180 - imu.get_heading());
-    // TODO:  might need to do PID stuff here.
-    // TODO:  double reading_adjusted_pid = pid.calculate(current_reading_imu_pid, reading_adjusted);
-    // TODO:  current_reading_imu_pid = reading_adjusted_pid;
-    // TODO:  return reading_adjusted_pid;
-    return reading_adjusted;
-}
+// void SwerveDrive::reset_sensors()
+// {
+//     imu.reset(true); // blocking
+// }
+// double SwerveDrive::get_imu_reading()
+// {
+//     double reading_adjusted = (180 - imu.get_heading());
+//     // TODO:  might need to do PID stuff here.
+//     // TODO:  double reading_adjusted_pid = pid.calculate(current_reading_imu_pid, reading_adjusted);
+//     // TODO:  current_reading_imu_pid = reading_adjusted_pid;
+//     // TODO:  return reading_adjusted_pid;
+//     return reading_adjusted;
+// }
 
 void SwerveDrive::drive_robot_orientated(double left_y_val, double left_x_val, double rot)
 {
@@ -58,12 +64,12 @@ void SwerveDrive::drive_robot_orientated(double left_y_val, double left_x_val, d
 
 void SwerveDrive::drive_field_orientated(double left_y_val, double left_x_val, double rot)
 {
-    double velocity_field_x = left_y_val * 0.7874; // converstion 100/127 to convert from controller to inches per second
-    double velocity_field_y = left_x_val * 0.7874;
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Y Value: %f", left_y_val);
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "X Value: %f", left_x_val);
+    double velocity_field_x = -left_y_val * 0.7874; // converstion 100/127 to convert from controller to inches per second
+    double velocity_field_y = -left_x_val * 0.7874;
 
-    double theta = get_imu_reading() * (M_PI / 180);
-
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "theta: %f", theta);
+    double theta = odom.get_imu_reading() * (M_PI / 180);
 
     double velocity_robot_x = velocity_field_x * std::cos(theta) + velocity_field_y * std::sin(theta);
     double velocity_robot_y = -velocity_field_x * std::sin(theta) + velocity_field_y * std::cos(theta);
@@ -86,3 +92,24 @@ void SwerveDrive::drive_field_orientated(double left_y_val, double left_x_val, d
         mod.set_state(state);
     }
 }
+
+void SwerveDrive::drive_to_point_and_rotation(double x, double y, double theta) {
+    double x_position = odom.get_position_x();
+    double y_position = odom.get_position_y();
+    double theta_position = inputModulus(theta, -180, 180);
+
+    double x_target = x;
+    double y_target = y;
+
+    double x_pow = clamp(pid_x.calculate(x_position, x_target), -50, 50);
+    double y_pow = clamp(pid_y.calculate(y_position, y_target), -50, 50);
+
+    
+
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "X position: %f", x_position);
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Y position: %f", y_position);
+    double theta_pow = pid_theta.calculate(odom.get_imu_reading(), theta);
+    drive_field_orientated(x_pow, y_pow, -theta_pow);
+
+}
+
