@@ -36,7 +36,7 @@ void on_center_button()
  */
 // pros::Rotation forwardRot(5); // changed to port 6
 // // pros::Rotation sidewaysRot(-6);
-pros::IMU imu(14); // TODO get the correct port number
+pros::IMU imu(13); // TODO get the correct port number
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -52,25 +52,25 @@ pros::Controller master(pros::E_CONTROLLER_MASTER);
 // Autos autos = Autos();
 // PathFollower follower(odom, right_mg, left_mg);
 
-pros::Motor fr_bottom_motor(2);
-pros::Motor fr_top_motor(3);
-pros::Rotation fr_encoder(-1);
+pros::Motor fr_bottom_motor(5);
+pros::Motor fr_top_motor(6);
+pros::Rotation fr_encoder(-7);
 
-pros::Motor fl_bottom_motor(12);
-pros::Motor fl_top_motor(13);
-pros::Rotation fl_encoder(-11);
+pros::Motor fl_bottom_motor(15);
+pros::Motor fl_top_motor(16);
+pros::Rotation fl_encoder(-17);
 
 pros::Motor br_bottom_motor(9);
-pros::Motor br_top_motor(8);
-pros::Rotation br_encoder(-10);
+pros::Motor br_top_motor(10);
+pros::Rotation br_encoder(-8);
 
-pros::Motor bl_bottom_motor(18);
+pros::Motor bl_bottom_motor(20);
 pros::Motor bl_top_motor(19);
-pros::Rotation bl_encoder(-20);
+pros::Rotation bl_encoder(-18);
 
 
-pros::Rotation horizonal(-15);
-pros::Rotation vertical(4);
+pros::Rotation horizonal(-11);
+pros::Rotation vertical(12);
 
 Odometry odom(horizonal, vertical, imu);
 
