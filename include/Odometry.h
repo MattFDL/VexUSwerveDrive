@@ -6,6 +6,7 @@
 #include "pros/imu.hpp"
 #include "pros/screen.hpp"
 #include "CommonUtility.h"
+#include "Pose.h"
 
 class Odometry {
     private:
@@ -28,6 +29,7 @@ class Odometry {
         double get_imu_reading();
         double get_position_x();
         double get_position_y();
+        void set_starting_position(Pose p);
 
 };
 

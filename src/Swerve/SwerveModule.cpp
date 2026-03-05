@@ -14,6 +14,8 @@ SwerveModule::SwerveModule(pros::Motor &t_m, pros::Motor &b_m, pros::Rotation &m
     turn_controller.setIzone(0.4);
     turn_controller.setMaxMinI(10, -10);
     turn_controller.setErrorTolerance(0.2);
+    std::pair<double,double> temp(0,0);
+    previous_module_state = temp;
 };
 
 /*
@@ -27,6 +29,9 @@ void SwerveModule::set_state(std::pair<double, double> target_state)
     // needs to be kept between -180 and 180 for consistency
 
     // //angle optimization
+
+
+    
     std::pair<double, double> new_target_state = optimize_angle(target_state, current_rotation_degs);
     double angle_setpoint = new_target_state.first;
     double vel = new_target_state.second;
@@ -37,10 +42,17 @@ void SwerveModule::set_state(std::pair<double, double> target_state)
     }
 
     vel = (vel * 100);
+    // conversion to mV
+
+    // if (abs(vel) < 500) {
+    //     vel = 0;
+    //     angle_setpoint = previous_rotation;
+    // }  
+    
+
     // inches per second to voltage estimation
     // probably could do better later lol
     double rotation_gain = turn_controller.calculate(current_rotation_degs, angle_setpoint);
-
     double top_motor_speed = vel + rotation_gain;
     double bottom_motor_speed = -vel + rotation_gain;
 
@@ -50,6 +62,8 @@ void SwerveModule::set_state(std::pair<double, double> target_state)
 
     top_motor.move_voltage(top_motor_speed);
     bottom_motor.move_voltage(bottom_motor_speed);
+
+    previous_rotation = angle_setpoint;
 };
 
 std::pair<double, double> SwerveModule::optimize_angle(std::pair<double, double> target_state, double current_angle)

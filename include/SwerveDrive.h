@@ -9,6 +9,7 @@
 #include <vector>
 #include <cmath>
 #include "PIDController.h"
+#include "Pose.h"
 
 class SwerveDrive {
     public:
@@ -20,9 +21,10 @@ class SwerveDrive {
         SwerveModule back_right;
         SwerveModule back_left;
         Odometry &odom;
-        PIDController pid_x = PIDController(6.0, 0, 0.2);
-        PIDController pid_y = PIDController(6.0, 0, 0.2);
-        PIDController pid_theta = PIDController(0.5, 0, 0);
+        bool auto_in_use = false;
+        PIDController pid_x = PIDController(6.0, 0, 0.0);//0.3
+        PIDController pid_y = PIDController(6.0, 0, 0.0);
+        PIDController pid_theta = PIDController(0.7, 0, 0);
 
         std::vector<SwerveModule> modules; 
         SwerveDrive(SwerveModule &fr, SwerveModule &fl, SwerveModule &br, SwerveModule &bl, Odometry &o);
@@ -33,6 +35,7 @@ class SwerveDrive {
         void drive_robot_orientated(double left_y_val, double left_x_val, double rot);
         void drive_field_orientated(double left_y_val, double left_x_val, double rot);
         void drive_to_point_and_rotation(double x, double y, double theta);
+        bool drive_to_point_and_rotation_auto(Pose p, double ff = 5);
 
 };
 #endif

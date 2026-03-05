@@ -19,9 +19,11 @@ SwerveDrive::SwerveDrive(SwerveModule &fr, SwerveModule &fl, SwerveModule &br, S
     pid_theta.enableContinuousInput(-180, 180);
     pid_theta.setErrorTolerance(5);
     pid_x.setIzone(5);
-    pid_x.setMaxMinI(20, -20);
+    pid_x.setMaxMinI(40, -40);
+    pid_x.setErrorTolerance(0.5);
     pid_y.setIzone(5);
-    pid_y.setMaxMinI(20, -20);
+    pid_y.setMaxMinI(40, -40);
+    pid_y.setErrorTolerance(0.5);
     //modules = {front_right, front_left, back_right, back_left};
 }
 
@@ -62,7 +64,7 @@ void SwerveDrive::drive_robot_orientated(double left_y_val, double left_x_val, d
     }
 }
 
-void SwerveDrive::drive_field_orientated(double left_y_val, double left_x_val, double rot)
+void SwerveDrive::drive_field_orientated(double left_y_val, double left_x_val, double rot) //inches per sec
 {
     pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 5, "Y Value: %f", left_y_val);
     pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6, "X Value: %f", left_x_val);
@@ -71,12 +73,18 @@ void SwerveDrive::drive_field_orientated(double left_y_val, double left_x_val, d
 
     double theta = odom.get_imu_reading() * (M_PI / 180);
 
+   
+
     double velocity_robot_x = velocity_field_x * std::cos(theta) + velocity_field_y * std::sin(theta);
     double velocity_robot_y = -velocity_field_x * std::sin(theta) + velocity_field_y * std::cos(theta);
 
     // rotation 2.4 full turns per second
     // 12.57 radians per second using 2 turns per second as an estimate
     double velocity_robot_rotation = rot * 0.0989763; // wheel_speed = w x r
+    if (abs(rot) < 5) {
+        velocity_robot_rotation = 0;
+    }
+
     for (auto mod : modules)
     {
         double x_mod_pos = mod.pos_x;
@@ -88,8 +96,10 @@ void SwerveDrive::drive_field_orientated(double left_y_val, double left_x_val, d
         std::pair<double, double> state(angle, speed);
         // pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2, "Angle: %f", angle);
         // pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, mod.module_number * 2 + 1, "Speed: %f", speed);
-
+        
         mod.set_state(state);
+        
+        
     }
 }
 
@@ -101,15 +111,73 @@ void SwerveDrive::drive_to_point_and_rotation(double x, double y, double theta) 
     double x_target = x;
     double y_target = y;
 
-    double x_pow = clamp(pid_x.calculate(x_position, x_target), -50, 50);
-    double y_pow = clamp(pid_y.calculate(y_position, y_target), -50, 50);
+    double x_pow = clamp(pid_x.calculate(x_position, x_target), -100, 100);
+    double y_pow = clamp(pid_y.calculate(y_position, y_target), -100, 100);
 
     
-
     pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "X position: %f", x_position);
     pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Y position: %f", y_position);
     double theta_pow = pid_theta.calculate(odom.get_imu_reading(), theta);
     drive_field_orientated(x_pow, y_pow, -theta_pow);
 
+}
+// bool SwerveDrive::drive_to_point_and_rotation_auto(Pose p) {
+//     double x_position = odom.get_position_x();
+//     double y_position = odom.get_position_y();
+//     double theta_position = inputModulus(p.heading, -180, 180);
+
+//     double x_target = p.x;
+//     double y_target = p.y;
+
+//     double x_pow = pid_x.calculate(x_position, x_target);
+//     double y_pow = pid_y.calculate(y_position, y_target);
+
+//     pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "X position: %f", x_position);
+//     pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Y position: %f", y_position);
+    
+//     double theta_pow = pid_theta.calculate(odom.get_imu_reading(), theta_position);
+//     drive_field_orientated(x_pow, y_pow, -theta_pow);
+//     if (pid_x.atTolerance() && pid_y.atTolerance() && pid_theta.atTolerance()) {
+//         return true;
+//     } else {
+//         return false; 
+//     }
+// }
+bool SwerveDrive::drive_to_point_and_rotation_auto(Pose p, double ff) {
+    auto_in_use = true;
+    double x_position = odom.get_position_x();
+    double y_position = odom.get_position_y();
+    double theta_position = inputModulus(p.heading, -180, 180);
+
+    double x_target = p.x;
+    double y_target = p.y;
+
+    double x_error = (x_target - x_position);
+    double y_error = (y_target - y_position);
+
+    double error_hypo = std::sqrt(std::pow(x_error, 2) + std::pow(y_error, 2));
+
+    double theta_pow = pid_theta.calculate(odom.get_imu_reading(), theta_position);
+
+    double pid_out = clamp(-(pid_x.calculate(error_hypo,0)), -100, 100);
+    double total_output = pid_out + ff;
+    //total output will always have the same sign
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7, "Output: %f", total_output);
+
+    double position_angle = std::atan2(y_error, x_error);
+    double x_pow = std::cos(position_angle) * total_output;
+    double y_pow = std::sin(position_angle) * total_output;
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 8, "Angle: %f", (position_angle / M_PI) * 180);
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 9, "X-Pow: %f", x_pow);
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 10, "Y Pow: %f", y_pow);
+
+
+    drive_field_orientated(x_pow, y_pow, -theta_pow);
+    if (pid_x.atTolerance() && pid_theta.atTolerance()) {
+        auto_in_use = false;
+        return true;
+    } else {
+        return false; 
+    }
 }
 

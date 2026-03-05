@@ -7,6 +7,9 @@
 #include "SwerveModule.h"
 #include "SwerveDrive.h"
 #include "Odometry.h"
+#include "Autos.h"
+#include "AutoBuilder.h"
+#include "intake.h"
 
 /**
  * A callback function for LLEMU's center button.
@@ -36,11 +39,11 @@ void on_center_button()
  */
 // pros::Rotation forwardRot(5); // changed to port 6
 // // pros::Rotation sidewaysRot(-6);
-pros::IMU imu(13); // TODO get the correct port number
+pros::IMU imu(12); // TODO get the correct port number
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-// PneumaticCylinder lift('e');
+PneumaticCylinder lift('e');
 // PneumaticCylinder holder('g');
 // PneumaticCylinder rake('f');
 // PneumaticCylinder dscore('h');
@@ -52,25 +55,28 @@ pros::Controller master(pros::E_CONTROLLER_MASTER);
 // Autos autos = Autos();
 // PathFollower follower(odom, right_mg, left_mg);
 
-pros::Motor fr_bottom_motor(5);
-pros::Motor fr_top_motor(6);
+pros::Motor fr_bottom_motor(6);
+pros::Motor fr_top_motor(5);
 pros::Rotation fr_encoder(-7);
 
 pros::Motor fl_bottom_motor(15);
 pros::Motor fl_top_motor(16);
-pros::Rotation fl_encoder(-17);
+pros::Rotation fl_encoder(-17);//11
 
 pros::Motor br_bottom_motor(9);
-pros::Motor br_top_motor(10);
-pros::Rotation br_encoder(-8);
+pros::Motor br_top_motor(8);
+pros::Rotation br_encoder(-10);
 
-pros::Motor bl_bottom_motor(20);
-pros::Motor bl_top_motor(19);
+pros::Motor bl_bottom_motor(19);
+pros::Motor bl_top_motor(20);
 pros::Rotation bl_encoder(-18);
 
 
-pros::Rotation horizonal(-11);
-pros::Rotation vertical(12);
+pros::Rotation horizonal(13);
+pros::Rotation vertical(-11);
+
+pros::Motor rollers(-1);
+pros::Motor lever(-2);
 
 Odometry odom(horizonal, vertical, imu);
 
@@ -92,12 +98,17 @@ void opcontrol()
 {	
 	
 
-	SwerveModule mod_fr(fr_top_motor, fr_bottom_motor, fr_encoder, 5, -5, 0);
-	SwerveModule mod_fl(fl_top_motor, fl_bottom_motor, fl_encoder, 5, 5, 1, true);
-	SwerveModule mod_br(br_top_motor, br_bottom_motor, br_encoder, -5, -5, 2);
+	SwerveModule mod_fr(fr_top_motor, fr_bottom_motor, fr_encoder, 5, -5, 0, false);
+	SwerveModule mod_fl(fl_top_motor, fl_bottom_motor, fl_encoder, 5, 5, 1, false);
+	SwerveModule mod_br(br_top_motor, br_bottom_motor, br_encoder, -5, -5, 2, true);
 	SwerveModule mod_bl(bl_top_motor, bl_bottom_motor, bl_encoder, -5, 5, 3, true);
-	// SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl, imu);
+
+	
 	SwerveDrive drive_train(mod_fr, mod_fl, mod_br, mod_bl, odom);
+	Autos autos = Autos();
+	AutoBuilder builder = autos.getAutoLeftSide(drive_train, odom);
+	Intake intake = Intake(rollers, lever, lift);
+
 	// drive_train.reset_sensors();
 	double angle = 0;
 	while (true)
@@ -120,10 +131,25 @@ void opcontrol()
 
 		
 		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-			drive_train.drive_to_point_and_rotation(20, 20, -90);
+			//drive_train.drive_to_point_and_rotation(20, 20, -90);
+			//builder.run_commands();
+			// if (!drive_train.auto_in_use) {
+			// 	drive_train.drive_field_orientated(0, 0, 0);
+			// }
+			intake.lift_lever();
 		} else {
 			drive_train.drive_field_orientated(left_Y, -left_X, right_x);
 		}
+		intake.handle_intake();
+
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+			intake.run_rollers();}
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+			intake.stop_rollers();}
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+			intake.reverse_rollers();}
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+			intake.toggle_lift();}
 		
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "X: %f", odom.position_x);
 		// pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Y: %f", odom.position_y);

@@ -40,3 +40,8 @@ double Odometry::get_position_x() {
 double Odometry::get_position_y() {
     return position_y;
 }
+void Odometry::set_starting_position(Pose p) {
+    position_x = p.x;
+    position_y = p.y;
+    imu.set_heading((180 - p.heading));
+}

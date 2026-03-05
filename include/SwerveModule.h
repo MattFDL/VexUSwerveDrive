@@ -17,6 +17,8 @@ class SwerveModule {
         double pos_y; //positive left
         double module_number;
         bool reversed;
+        std::pair<double, double> previous_module_state;
+        double previous_rotation = 0;
         SwerveModule(pros::Motor &t_m, pros::Motor &b_m, pros::Rotation &m_a, double position_x, double position_y, double mod_num, bool rev = false);
 
         void set_state(std::pair<double, double> target_state);

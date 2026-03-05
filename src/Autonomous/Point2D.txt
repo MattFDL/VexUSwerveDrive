@@ -14,7 +14,4 @@ struct Point2D {
     }
 
 };
-
-
-
 #endif
