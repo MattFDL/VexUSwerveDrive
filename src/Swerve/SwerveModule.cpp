@@ -13,7 +13,7 @@ SwerveModule::SwerveModule(pros::Motor &t_m, pros::Motor &b_m, pros::Rotation &m
     turn_controller.enableContinuousInput(-180, 180);
     turn_controller.setIzone(0.4);
     turn_controller.setMaxMinI(10, -10);
-    turn_controller.setErrorTolerance(0.2);
+    turn_controller.setErrorTolerance(5);
     std::pair<double,double> temp(0,0);
     previous_module_state = temp;
 };
@@ -48,18 +48,23 @@ void SwerveModule::set_state(std::pair<double, double> target_state)
 
     double top_motor_speed = vel + rotation_gain;
     double bottom_motor_speed = -vel + rotation_gain;
-
-    if (rotation_gain < -6000) {
-        top_motor_speed = clamp(top_motor_speed, -12000, 12000);
-
+ 
+    if (!turn_controller.atTolerance()) {
+        double top_motor_speed = rotation_gain;
+        double bottom_motor_speed = rotation_gain;
     }
 
-    top_motor_speed = clamp(top_motor_speed, -12000, 12000);
-    bottom_motor_speed = clamp(bottom_motor_speed, -12000, 12000);
+    top_motor_speed = top_motor_speed;
+    bottom_motor_speed = bottom_motor_speed;
 
     top_motor.move_voltage(top_motor_speed);
     bottom_motor.move_voltage(bottom_motor_speed);
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6 + module_number, "Vel: top %f", top_motor_speed);
+    if (module_number = 1) {
+        pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6 + module_number, "Amps: top %f", top_motor_speed);
+        pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 7 + module_number, "Amps: bottom %f", top_motor_speed);
+
+    }
+    
 
     previous_rotation = angle_setpoint;
 };

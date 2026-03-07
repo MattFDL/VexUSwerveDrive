@@ -45,7 +45,7 @@ SwerveDrive::SwerveDrive(SwerveModule &fr, SwerveModule &fl, SwerveModule &br, S
 
 void SwerveDrive::drive_robot_orientated(double left_y_val, double left_x_val, double rot)
 {
-    double velocity_robot_x = left_y_val * 0.7874; // converstion 100/127 to convert from controller to inches per second
+    double velocity_robot_x = left_y_val * 0.7874; // conversion 100/127 to convert from controller to inches per second
     double velocity_robot_y = left_x_val * 0.7874;
 
     // rotation 2.4 full turns per second

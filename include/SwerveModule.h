@@ -12,7 +12,7 @@ class SwerveModule {
         pros::Motor bottom_motor;
         pros::Rotation moduleAngle;
     public:
-        PIDController turn_controller = PIDController(200.0, 0, 0);
+        PIDController turn_controller = PIDController(150.0, 0, 0);
         double pos_x; //positive forward
         double pos_y; //positive left
         double module_number;
