@@ -12,7 +12,7 @@ class SwerveModule {
         pros::Motor bottom_motor;
         pros::Rotation moduleAngle;
     public:
-        PIDController turn_controller = PIDController(150.0, 0, 0);
+        PIDController turn_controller = PIDController(200.0, 0, 0);
         double pos_x; //positive forward
         double pos_y; //positive left
         double module_number;
@@ -22,7 +22,9 @@ class SwerveModule {
         SwerveModule(pros::Motor &t_m, pros::Motor &b_m, pros::Rotation &m_a, double position_x, double position_y, double mod_num, bool rev = false);
 
         void set_state(std::pair<double, double> target_state);
-        
+
         std::pair<double, double> optimize_angle(std::pair<double, double> target_state, double current_angle);
+
+        void stop();
 };
 #endif

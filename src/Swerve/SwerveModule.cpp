@@ -18,20 +18,17 @@ SwerveModule::SwerveModule(pros::Motor &t_m, pros::Motor &b_m, pros::Rotation &m
     previous_module_state = temp;
 };
 
+
 /*
 Assumptions:
 Both motors positive (right or cw) equals wheel moves left (ccw)
 */
-
 void SwerveModule::set_state(std::pair<double, double> target_state)
-{ // angle in (-180, 180) then velocity in inches
+{ // pair is in the form angle in (-180, 180) then velocity in inches
     double current_rotation_degs = (static_cast<double>(moduleAngle.get_angle()) / 100.0) - 180.0; // 0 to 36000 for the absolute encoder
     // needs to be kept between -180 and 180 for consistency
 
     // //angle optimization
-
-
-    
     std::pair<double, double> new_target_state = optimize_angle(target_state, current_rotation_degs);
     double angle_setpoint = new_target_state.first;
     double vel = new_target_state.second;
@@ -42,26 +39,27 @@ void SwerveModule::set_state(std::pair<double, double> target_state)
     }
 
     vel = (vel * 100);
-    // conversion to mV
-
-    // if (abs(vel) < 500) {
-    //     vel = 0;
-    //     angle_setpoint = previous_rotation;
-    // }  
-    
+    // conversion to mV    
 
     // inches per second to voltage estimation
     // probably could do better later lol
     double rotation_gain = turn_controller.calculate(current_rotation_degs, angle_setpoint);
+
+
     double top_motor_speed = vel + rotation_gain;
     double bottom_motor_speed = -vel + rotation_gain;
 
+    if (rotation_gain < -6000) {
+        top_motor_speed = clamp(top_motor_speed, -12000, 12000);
+
+    }
+
     top_motor_speed = clamp(top_motor_speed, -12000, 12000);
     bottom_motor_speed = clamp(bottom_motor_speed, -12000, 12000);
-    // TODO: need to normalize these speeds***********************
 
     top_motor.move_voltage(top_motor_speed);
     bottom_motor.move_voltage(bottom_motor_speed);
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 6 + module_number, "Vel: top %f", top_motor_speed);
 
     previous_rotation = angle_setpoint;
 };
@@ -79,5 +77,10 @@ std::pair<double, double> SwerveModule::optimize_angle(std::pair<double, double>
     {
         std::pair<double, double> temp(inputModulus(target_state.first + 180, -180, 180), target_state.second * -1);
         return temp;
+        //optimized input to go to closest angle, this angle needs to have reversed speed
     }
+}
+void SwerveModule::stop() {
+    top_motor.move_voltage(0);
+    bottom_motor.move_voltage(0);
 }

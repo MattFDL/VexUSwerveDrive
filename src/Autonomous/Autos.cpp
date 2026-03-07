@@ -83,6 +83,14 @@ std::function<bool()> Autos::goToPose(Pose p, SwerveDrive &drive) {
     };
     return func;
 }
+std::function<bool()> Autos::goToPoseSlow(Pose p, SwerveDrive &drive) {
+    auto func = [&drive, p]() -> bool {
+        bool b = drive.drive_to_point_and_rotation_auto_slow(p);
+        return b;
+    };
+    return func;
+}
+
 
 AutoBuilder Autos::getAutoRightSide()
 {
@@ -97,17 +105,82 @@ AutoBuilder Autos::getTestAuto()
 
     return builder;
 }
-AutoBuilder Autos::getAutoLeftSide(SwerveDrive &drive, Odometry &odom)
+AutoBuilder Autos::noMatchLoadAuto(SwerveDrive &drive, Odometry &odom, Intake &intake)
 {
     AutoBuilder builder = AutoBuilder();
     
     builder.add_command(Command([&odom, this](){
-        odom.set_starting_position(leftSideStart);
+        odom.set_starting_position(noMatchStart);
         return true;
     }));
-    builder.add_command(Command(goToPose(leftside1, drive)));
-    builder.add_command(Command(goToPose(leftside2, drive)));
-    //builder.add_command(Command(goToPose(leftside3, drive)));
+    builder.add_command(Command(goToPose(noMatch1, drive)));
+    builder.add_command(Command([&intake, this](){
+        intake.run_rollers();
+        return true;
+    }));
+    builder.add_command(Command(goToPose(noMatch2, drive)));
+    builder.add_command(Command(goToPose(noMatch3, drive)));
+
+    builder.add_command(Command([&intake, this](){
+        intake.flap.extend();
+        return true;
+    }));
+
+    builder.add_command(Command(goToPose(noMatch4, drive)));
+    builder.add_command(Command([&intake, this](){
+        intake.lift_lever();
+        return true;
+    }));
+    builder.add_command(Command(waitCommand(3)));
+    builder.add_command(Command([&intake, this](){
+        intake.lift_lever();
+        return true;
+    }));
+    builder.add_command(Command(waitCommand(3)));
+    builder.add_command(Command([&intake, this](){
+        intake.lift_lever();
+        return true;
+    }));
+    builder.add_command(Command(waitCommand(3)));
+    builder.add_command(Command([&intake, this](){
+        intake.toggle_lift();
+        intake.full_send(5000);
+        return true;
+    }));
+    
+    return builder;
+}
+AutoBuilder Autos::matchLoadAuto(SwerveDrive &drive, Odometry &odom, Intake &intake, PneumaticCylinder &matchLoadMech) {
+    AutoBuilder builder = AutoBuilder();
+    
+    builder.add_command(Command([&odom, this](){
+        odom.set_starting_position(matchLoadStart);
+        return true;
+    }));
+    builder.add_command(Command(goToPose(matchLoad1, drive)));
+    builder.add_command(Command([&matchLoadMech, &intake](){
+        matchLoadMech.extend();
+        intake.run_rollers();
+        return true;
+    }));
+    builder.add_command(Command(goToPose(matchLoad2, drive)));
+    builder.add_command(Command(waitCommand(1)));
+    builder.add_command(Command([&intake](){
+        intake.toggle_lift();
+        return true;
+    }));
+    builder.add_command(Command(goToPose(matchLoad3, drive)));
+    builder.add_command(Command([&intake](){
+        intake.lift_lever();
+        return true;
+    }));
+    builder.add_command(Command(goToPose(matchLoad4, drive)));
+    builder.add_command(Command(waitCommand(1)));
+    builder.add_command(Command(goToPose(matchLoad5, drive)));
+    builder.add_command(Command([&intake](){
+        intake.lift_lever();
+        return true;
+    }));
 
 
     return builder;

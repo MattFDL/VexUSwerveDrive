@@ -24,7 +24,7 @@ void Odometry::calculate_position() {
     position_y = position_y - ((deltaY * cos(heading)) - (deltaX * sin(heading)));
     pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 0, "Position X: %f", position_x);
     pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 1, "Position Y: %f", position_y);
-    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Heading: %f", heading);
+    pros::screen::print(pros::text_format_e_t::E_TEXT_MEDIUM, 2, "Heading: %f", get_imu_reading());
 
     vertical_inches_previous = vertical_inches_count;
     horizontal_inches_previous = horizontal_inches_count;
